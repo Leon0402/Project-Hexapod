@@ -12,7 +12,7 @@
 @param mountingangle The angle at which the servo is mounted
 @param defaultposition The default position of the foot
 */
-Leg::Leg(Servo* coxaservo, Servo* femurservo, Servo* tibiaservo, float legoffset, uint8_t mountingangle, Pointf defaultposition)
+Leg::Leg(Servo* coxaservo, Servo* femurservo, Servo* tibiaservo, float legoffset, float mountingangle, Pointf defaultposition)
 : coxaServo(coxaservo), femurServo(femurservo), tibiaServo(tibiaservo), legOffset(legoffset), mountingAngle(mountingangle), position(defaultposition) {
 }
 
@@ -31,31 +31,34 @@ Leg::~Leg() {
 */
 void Leg::moveTo(Pointf destination) {
     position = destination;
-    destination.rotateXY(mountingAngle * (int16_t)-1);
+    destination.rotateXY(mountingAngle);
     destination.y -= legOffset;
-    //std::cout << "Destination: " << destination.x << "/" << destination. y << "/" << destination.z << '\n';
 
     uint8_t angleCoxa = atan((destination.x/(float)destination.y))*180/M_PI + ANGLEMAX/2 + 0.5;
-    //std::cout << "angleCoxa: " << (unsigned int)angleCoxa <<  '\n';
 
     uint8_t lengthLeg = sqrt((destination.x*destination.x) + (destination.y*destination.y)) + 0.5;
-    //std::cout << "lengthLeg: " << (unsigned int) lengthLeg << '\n';
     float lengthFemDes = sqrt((HEIGHT - destination.z) * (HEIGHT - destination.z) + (lengthLeg - COXA) * (lengthLeg - COXA));
-    //std::cout << "lengthFemDes: " << lengthFemDes << '\n';
 
     uint8_t angleFemur1 = acos(((HEIGHT - destination.z) / lengthFemDes))*180/M_PI + 0.5;
-    //std::cout << "AngleFemur1: " << (unsigned int)angleFemur1 << '\n';
     uint8_t angleFemur2 = acos((FEMUR*FEMUR + lengthFemDes*lengthFemDes - TIBIA*TIBIA) / (2*FEMUR*lengthFemDes))*180/M_PI + 0.5;
-    //std::cout << "AngleFemur2: " << (unsigned int)angleFemur2 << '\n';
-    uint8_t angleFemur = angleFemur1 + angleFemur2 + 0.5 - 45;
-    //std::cout << "angleFemur: " << (unsigned int)angleFemur << '\n';
-    uint8_t angleTibia = 180 - acos((FEMUR*FEMUR + TIBIA*TIBIA - lengthFemDes*lengthFemDes) / (2*FEMUR*TIBIA))*180/M_PI + 0.5;
-    //std::cout << "angleTibia: " << (unsigned int)angleTibia << '\n';
+    uint8_t angleFemur = angleFemur1 + angleFemur2 + 0.5;
+
+    uint8_t angleTibia = acos((FEMUR*FEMUR + TIBIA*TIBIA - lengthFemDes*lengthFemDes) / (2*FEMUR*TIBIA))*180/M_PI + 0.5;
+
+    //Change angles depending on the position of the leg and the hardware configuration of the servos
+    if(mountingAngle == 0 || mountingAngle== 62 || mountingAngle == 298) {
+      angleFemur -= 45;
+      angleTibia = 180 - angleTibia;
+    } else {
+      angleFemur = 225 - angleFemur;
+      //angleCoxa =  180 - angleCoxa;
+    }
+
 
 #ifdef DEBUG
     std::cout << "angleCoxa: " << (unsigned int)angleCoxa << '\n';
     std::cout << "angleFemur: " << (unsigned int)angleFemur << '\n';
-    std::cout << "angleTibia: " << (unsigned int)angleTibia << '\n';
+    std::cout << "angleTibia: " << (unsigned int)angleTibia << '\n' << '\n';
 #endif
 
     setAngles(angleCoxa, angleFemur, angleTibia);

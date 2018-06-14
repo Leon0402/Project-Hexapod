@@ -6,6 +6,7 @@
 #ifdef DEBUG
 #include <cstdint>
 #include <cmath>
+#include <ostream>
 #else
 #include <math.h>
 #endif
@@ -16,7 +17,7 @@ public:
 			x(x1), y(x2), z(x3) {
 	}
 
-	void rotateXY(int16_t angle) {
+	void rotateXY(float angle) {
 		x = x * cos(angle * M_PI / 180) - y * sin(angle * M_PI / 180);
 		y = x * sin(angle * M_PI / 180) + y * cos(angle * M_PI / 180);
 	}
@@ -33,12 +34,26 @@ public:
 	}
 
 	void rotateXY(float angle) {
-		x = x * cos(angle * M_PI / 180) - y * sin(angle * M_PI / 180);
-		y = x * sin(angle * M_PI / 180) + y * cos(angle * M_PI / 180);
+		float xAlt = x;
+		x = x*cos(angle * M_PI / 180) - y * sin(angle * M_PI / 180);
+		y = xAlt * sin(angle * M_PI / 180) + y * cos(angle * M_PI / 180);
 	}
 
 	float x;
 	float y;
 	float z;
 };
+
+#ifdef DEBUG
+inline std::ostream& operator<<(std::ostream& os, const Pointf& point) {
+	os << '(' << point.x << '/' << point.y << '/' << point.z << ')';
+	return os;
+}
+#endif
+
 #endif //POINT_H
+
+
+/*
+cos takes radian, returns degrees
+*/

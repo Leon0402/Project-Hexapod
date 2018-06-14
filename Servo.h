@@ -42,17 +42,18 @@ public:
         //mapt die Winkel zur einer puslänge
         uint16_t off = ((angle * (servoMax-servoMin) * (uint32_t)2) / (float)ANGLEMAX + 1) / 2 + servoMin;
 
+        /*
         #ifdef DEBUG
         std::cout << "angle: " << (unsigned int)angle << '\n';
         std::cout << "pin: " << (unsigned int)pin << '\n';
         std::cout << "off: " << off << '\n';
-        #endif
+        #endif*/
 
         //übergibt Werte an Servocontroller
         servocontroller->setPWM(pin,0,off);
 
         #ifndef DEBUG
-        delay(3000);
+        delay(1000);
         #endif
     }
 private:
