@@ -1,17 +1,21 @@
-DEBUG = 1
+#DEBUG = 1
 
 ifdef DEBUG
 
-Hexapod: main.o leg.o servocontroller.o
-	g++ -o Hexapod main.o leg.o servocontroller.o
+Hexapod: main.o hexapod.o leg.o servo.o servocontroller.o
+	g++ -o Hexapod main.o hexapod.o leg.o servo.o servocontroller.o
 main.o: main.cpp
 	g++ -c main.cpp
+hexapod.o: hexapod.cpp
+	g++ -c hexapod.cpp
 leg.o: leg.cpp
 	g++ -c leg.cpp
+servo.o: servo.cpp
+	g++ -c servo.cpp
 servocontroller.o: servocontroller.cpp
 	g++ -c servocontroller.cpp
 clean:
-	rm -f main.o leg.o servocontroller.o
+	rm -f main.o hexapod.o leg.o servo.o servocontroller.o
 all: clean Hexapod
 
 else

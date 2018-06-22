@@ -13,7 +13,7 @@
 
 class Point {
 public:
-	Point(int8_t x1, int8_t x2, int8_t x3) :
+	Point(int8_t x1 = 0, int8_t x2 = 0, int8_t x3 = 0) :
 			x(x1), y(x2), z(x3) {
 	}
 
@@ -29,7 +29,7 @@ public:
 
 class Pointf {
 public:
-	Pointf(float x1, float x2, float x3) :
+	Pointf(float x1 = 0.0f, float x2 = 0.0f, float x3 = 0.0f) :
 			x(x1), y(x2), z(x3) {
 	}
 

@@ -5,29 +5,23 @@
 #endif
 //setzt adresse des Servo Controller -> default = 0x40 und erzeugt TwoWire Objekt zur Übertragung
 Servocontroller::Servocontroller(uint8_t addr)
-: i2caddr(addr) {
+: i2caddr(addr)
     #ifndef DEBUG
-    i2c = new TwoWire();
+    ,i2c{TwoWire {}}
     #endif
-}
+{}
 
-//Löscht dynamisch erzeugtes TwoWire Objekt
-Servocontroller::~Servocontroller() {
-    #ifndef DEBUG
-    delete i2c;
-    #endif
-}
 
 //setzt default Übertragungspins
-void Servocontroller::begin() const {
+void Servocontroller::begin() {
     #ifndef DEBUG
-    i2c->begin();
+    i2c.begin();
     #endif
     reset();
 }
 
 //resettet Controller
-void Servocontroller::reset() const {
+void Servocontroller::reset() {
     write8(PCA9685_MODE1, 0x80);
     #ifndef DEBUG
     delay(10);
@@ -35,7 +29,7 @@ void Servocontroller::reset() const {
 }
 
 //Setzt die Frequenz der PWM Signale
-void Servocontroller::setPWMFreq(float freq) const {
+void Servocontroller::setPWMFreq(float freq) {
 
   freq *= 0.9;  // Correct for overshoot in the frequency setting (see issue #11).
   float prescaleval = 25000000;
@@ -59,36 +53,36 @@ void Servocontroller::setPWMFreq(float freq) const {
 }
 
 //Erzeugt ein PWM Signal am pin pinNum mit dem übergebenem on und off wert im Zyklus
-void Servocontroller::setPWM(uint8_t pinNum, uint16_t on, uint16_t off) const {
+void Servocontroller::setPWM(uint8_t pinNum, uint16_t on, uint16_t off) {
     #ifndef DEBUG
-    i2c->beginTransmission(i2caddr);
-    i2c->write(LED0_ON_L+4*pinNum);
-    i2c->write(on);
-    i2c->write(on>>8);
-    i2c->write(off);
-    i2c->write(off>>8);
-    i2c->endTransmission();
+    i2c.beginTransmission(i2caddr);
+    i2c.write(LED0_ON_L+4*pinNum);
+    i2c.write(on);
+    i2c.write(on>>8);
+    i2c.write(off);
+    i2c.write(off>>8);
+    i2c.endTransmission();
     #endif
 }
 
 /*******************************************************************************************/
 //Hilfsfunktionen
-uint8_t Servocontroller::read8(uint8_t addr) const {
+uint8_t Servocontroller::read8(uint8_t addr) {
     #ifndef DEBUG
-    i2c->beginTransmission(i2caddr);
-    i2c->write(addr);
-    i2c->endTransmission();
-    i2c->requestFrom((uint8_t)i2caddr, (uint8_t)1);
-    return i2c->read();
+    i2c.beginTransmission(i2caddr);
+    i2c.write(addr);
+    i2c.endTransmission();
+    i2c.requestFrom((uint8_t)i2caddr, (uint8_t)1);
+    return i2c.read();
     #endif
     return 0;
 }
 
-void Servocontroller::write8(uint8_t addr, uint8_t d) const {
+void Servocontroller::write8(uint8_t addr, uint8_t d) {
     #ifndef DEBUG
-    i2c->beginTransmission(i2caddr);
-    i2c->write(addr);
-    i2c->write(d);
-    i2c->endTransmission();
+    i2c.beginTransmission(i2caddr);
+    i2c.write(addr);
+    i2c.write(d);
+    i2c.endTransmission();
     #endif
 }
