@@ -24,9 +24,9 @@ BOARD_TAG  = nano
 BOARD_SUB   = atmega328
 MONITOR_PORT  = /dev/ttyUSB0
 ARDUINO_DIR =  /home/leon/Programme/arduino-1.8.5
-ARDMK_DIR = /home/leon/Programme/arduino-1.8.5
+ARDMK_DIR = /home/leon/Programme/Arduino-Makefile-master
 AVR_TOOLS_DIR = /home/leon/Programme/arduino-1.8.5/hardware/tools/avr
 ARDUINO_LIBS = Wire
-include /home/leon/Programme/arduino-1.8.5/Arduino.mk
+include /home/leon/Programme/Arduino-Makefile-master/Arduino.mk
 
 endif

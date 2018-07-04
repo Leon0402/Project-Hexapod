@@ -31,7 +31,7 @@ void Servocontroller::reset() {
 //Setzt die Frequenz der PWM Signale
 void Servocontroller::setPWMFreq(float freq) {
 
-  freq *= 0.9;  // Correct for overshoot in the frequency setting (see issue #11).
+  freq *= 0.9;
   float prescaleval = 25000000;
   prescaleval /= 4096;
   prescaleval /= freq;

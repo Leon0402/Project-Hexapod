@@ -4,6 +4,9 @@
 #include "Controls.h"
 
 #include "Servocontroller.h"
+#ifdef DEBUG
+#include <cstdint>
+#endif
 
 #define ANGLEMAX 180
 
