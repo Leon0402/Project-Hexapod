@@ -31,19 +31,13 @@ Hexapod::Hexapod(Servocontroller& servocontroller1, Servocontroller& servocontro
     Leg { servos[9], servos[10], servos[11], 8.5f, 242, Pointf {-15,-8,0}},
     Leg {servos[12], servos[13], servos[14], 6.5f, 180, Pointf {0,-14,0}},
     Leg {servos[15], servos[16], servos[17], 8.5f, 118, Pointf {15,-8,0}}
-  } {
-    servocontroller1.setPWMFreq(50);
-    servocontroller1.begin();
-    servocontroller2.setPWMFreq(50);
-    servocontroller2.begin();
-  }
+  } {}
 
 
 void Hexapod::test() {
   //rotation
-
-  this->legs[FRONT_LEFT].moveTo(Pointf(13.68,7.29,0));
   /*
+  this->legs[FRONT_LEFT].moveTo(Pointf(13.68,7.29,0));
   this->legs[MIDDLE_LEFT].moveTo(Pointf(0,13.5,0));
   this->legs[REAR_LEFT].moveTo(Pointf(-13.68,7.29,0));
 
@@ -57,5 +51,6 @@ void Hexapod::test() {
 
   this->legs[REAR_RIGHT].moveTo(Pointf(-14.5,-4,0));
   this->legs[MIDDLE_RIGHT].moveTo(Pointf(-4.12,-12.16,0));
-  this->legs[FRONT_RIGHT].moveTo(Pointf(7.5,-11,0));*/
+  this->legs[FRONT_RIGHT].moveTo(Pointf(7.5,-11,0));
+  */
 }

@@ -13,7 +13,7 @@
 #define COXA 2.5
 #define FEMUR 8.5
 #define TIBIA 12
-#define HEIGHT 3 //from femur mounting point
+#define HEIGHT 5 //from femur mounting point
 #define STEPS 1
 
 class Leg {

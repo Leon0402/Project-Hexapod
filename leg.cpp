@@ -13,7 +13,7 @@
 
 Leg::Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, float legOffset, uint16_t mountingAngle, Pointf position)
 : coxaServo(coxaServo), femurServo(femurServo), tibiaServo(tibiaServo), legOffset(legOffset), mountingAngle(mountingAngle), position(position) {
-  //calculateAngles();
+  calculateAngles();
 }
 
 void Leg::moveTo(const Pointf& destination) {
@@ -59,10 +59,6 @@ void Leg::moveTo(const Pointf& destination) {
   * 4. Repeating 1-3 for STEPS +1 times (until position == destination -> jump finished)
   */
   for(uint8_t i = 0; i <= STEPS; i++) {
-    #ifdef DEBUG
-      std::cout << position.x << '\n';
-      std::cout << nextStep << '\n';
-    #endif
     position.x += nextStep;
     //f(x) = m*x + n
     position.y = slope*position.x + yIntercept;

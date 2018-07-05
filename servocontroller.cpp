@@ -9,7 +9,10 @@ Servocontroller::Servocontroller(uint8_t addr)
     #ifndef DEBUG
     ,i2c{TwoWire {}}
     #endif
-{}
+{
+  begin();
+  setPWMFreq(50);
+}
 
 
 //setzt default Übertragungspins
