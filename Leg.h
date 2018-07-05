@@ -40,6 +40,11 @@ public:
   */
   void setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia);
 
+  void setCoxaAngles(uint8_t angleCoxa);
+  void setFemurAngle(uint8_t angleFemur);
+  void setTibiaAngle(uint8_t angleTibia);
+
+
 private:
   void calculateAngles();
 

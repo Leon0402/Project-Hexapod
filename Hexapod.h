@@ -29,6 +29,6 @@ private:
   Servocontroller servocontroller1;
   Servocontroller servocontroller2;
   Servo servos[18];
-  Leg legs[6];
+  Leg legs[3];
 };
 #endif //HEXAPOD_H

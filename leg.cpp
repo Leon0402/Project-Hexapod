@@ -80,10 +80,23 @@ void Leg::moveTo(const Pointf& destination) {
 }
 
 void Leg::setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
-    coxaServo.write(angleCoxa);
-    femurServo.write(angleFemur);
-    tibiaServo.write(angleTibia);
+  coxaServo.write(angleCoxa);
+  femurServo.write(angleFemur);
+  tibiaServo.write(angleTibia);
 }
+
+void Leg::setCoxaAngles(uint8_t angleCoxa) {
+  coxaServo.write(angleCoxa);
+}
+
+void Leg::setFemurAngle(uint8_t angleFemur) {
+  femurServo.write(angleFemur);
+}
+
+void Leg::setTibiaAngle(uint8_t angleTibia) {
+  tibiaServo.write(angleTibia);
+}
+
 
 /******************************************************************************************************************************************************/
 //private
