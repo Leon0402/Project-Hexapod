@@ -1,32 +1,64 @@
-#DEBUG = 1
+TARGET := Hexapod
 
-ifdef DEBUG
+#avr
+MCU        := atmega328p
+PROGRAMMER := arduino
+PORT       := -P /dev/ttyUSB0
+BAUD       := -b  57600
+F_CPU      := 16000000
 
-Hexapod: main.o hexapod.o leg.o servo.o servocontroller.o
-	g++ -o Hexapod main.o hexapod.o leg.o servo.o servocontroller.o
-main.o: main.cpp
-	g++ -c main.cpp
-hexapod.o: hexapod.cpp
-	g++ -c hexapod.cpp
-leg.o: leg.cpp
-	g++ -c leg.cpp
-servo.o: servo.cpp
-	g++ -c servo.cpp
-servocontroller.o: servocontroller.cpp
-	g++ -c servocontroller.cpp
+#Compiler
+CXX       := avr-g++
+LDFLAGS   :=
+CXXFLAGS  := -Wall -std=c++11 -c
+
+# Commands
+REMOVE := rm -r -f
+
+#Directories
+SRCDIR := src
+OBJDIR := obj
+BINDIR := bin
+
+# Files
+cppfiles := $(wildcard $(SRCDIR)/*.cpp)
+objects  := $(subst $(SRCDIR)/, $(OBJDIR)/, $(cppfiles:.cpp=.o))
+
+.Phony: all debug arduino install size clean
+
+default all: arduino
+
+debug: CXXFLAGS += -D DEBUG=1
+debug: CXX = g++
+debug: $(BINDIR)/$(TARGET)
+
+arduino: LDFLAGS += -Os -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+arduino: CXXFLAGS += -Os -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -D F_CPU=$(F_CPU)
+arduino: $(BINDIR)/$(TARGET).hex
+
+# Debug
+$(BINDIR)/$(TARGET): $(objects)
+	mkdir -p $(@D)
+	$(CXX) $(LDFLAGS) -o $@ $^
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $@ $<
+
+# Arduino
+$(BINDIR)/$(TARGET).elf: $(objects)
+	mkdir -p $(@D)
+	$(CXX) $(LDFLAGS) -o  $@ $^
+
+$(BINDIR)/$(TARGET).hex: $(BINDIR)/$(TARGET).elf
+	avr-objcopy -O ihex -j .data -j .text $(BINDIR)/$(TARGET).elf $(BINDIR)/$(TARGET).hex
+
+install:
+	avrdude -p $(MCU) $(PORT) $(BAUD) -c $(PROGRAMMER) -U flash:w:$(BINDIR)/$(TARGET).hex:i
+
+size:
+	avr-size --mcu=$(MCU) -C --format=avr $(BINDIR)/$(TARGET).elf
+
 clean:
-	rm -f main.o hexapod.o leg.o servo.o servocontroller.o
-all: clean Hexapod
-
-else
-
-BOARD_TAG  = nano
-BOARD_SUB   = atmega328
-MONITOR_PORT  = /dev/ttyUSB0
-ARDUINO_DIR =  /home/leon/Programme/arduino-1.8.5
-ARDMK_DIR = /home/leon/Programme/Arduino-Makefile-master
-AVR_TOOLS_DIR = /home/leon/Programme/arduino-1.8.5/hardware/tools/avr
-ARDUINO_LIBS = Wire
-include /home/leon/Programme/Arduino-Makefile-master/Arduino.mk
-
-endif
+	$(REMOVE) $(OBJDIR)
+	$(REMOVE) $(BINDIR)

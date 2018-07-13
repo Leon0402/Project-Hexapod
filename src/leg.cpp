@@ -1,10 +1,11 @@
 #include "Leg.h"
 
 #ifdef DEBUG
-#include <cmath>
-#include <iostream>
+  #include <cmath>
+  #include <iostream>
+  #define PRINT(X) std::cout << (#X) << '\t' << (X) << std::endl;
 #else
-#include <math.h>
+  #include <math.h>
 #endif
 
 /******************************************************************************************************************************************************/
@@ -13,7 +14,7 @@
 
 Leg::Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, float legOffset, uint16_t mountingAngle, Pointf position)
 : coxaServo(coxaServo), femurServo(femurServo), tibiaServo(tibiaServo), legOffset(legOffset), mountingAngle(mountingAngle), position(position) {
-  calculateAngles();
+  //calculateAngles();
 }
 
 void Leg::moveTo(const Pointf& destination) {
@@ -44,12 +45,12 @@ void Leg::moveTo(const Pointf& destination) {
   //c = z1
   float c = HEIGHT;
 
-#ifdef DEBUG
+  #ifdef DEBUG
       std::cout << "nextStep: " << nextStep << '\n';
       std::cout << "f(x) = m*x + y: " << slope << "*x + " << yIntercept << '\n';
       std::cout << "f(x) = a*(x - b)² + c: " << a << "*(x - " << b << ")² + " << c << '\n';
       std::cout << "currentPosition: " << position << '\n';
-#endif
+  #endif
 
   /*
   *Calculates position of the next step.
@@ -85,7 +86,7 @@ void Leg::setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
   tibiaServo.write(angleTibia);
 }
 
-void Leg::setCoxaAngles(uint8_t angleCoxa) {
+void Leg::setCoxaAngle(uint8_t angleCoxa) {
   coxaServo.write(angleCoxa);
 }
 
@@ -97,7 +98,10 @@ void Leg::setTibiaAngle(uint8_t angleTibia) {
   tibiaServo.write(angleTibia);
 }
 
-
+void Leg::setPosition(const Pointf& position) {
+  this->position = position;
+  calculateAngles();
+}
 /******************************************************************************************************************************************************/
 //private
 /******************************************************************************************************************************************************/
@@ -107,16 +111,18 @@ void Leg::calculateAngles() {
   destination.rotateXY(mountingAngle);
   destination.y -= legOffset;
 
-  uint8_t angleCoxa = atan((destination.x/destination.y))*180/M_PI + ANGLEMAX/2 + 0.5;
+  float angleCoxa = atan((destination.x/destination.y))*180.0f/M_PI + ANGLEMAX/2.0f;
 
-  uint8_t lengthLeg = sqrt((destination.x*destination.x) + (destination.y*destination.y)) + 0.5;
+  float lengthLeg = sqrt((destination.x*destination.x) + (destination.y*destination.y));
   float lengthFemDes = sqrt((HEIGHT - destination.z) * (HEIGHT - destination.z) + (lengthLeg - COXA) * (lengthLeg - COXA));
 
-  uint8_t angleFemur1 = acos(((HEIGHT - destination.z) / lengthFemDes))*180/M_PI + 0.5;
-  uint8_t angleFemur2 = acos((FEMUR*FEMUR + lengthFemDes*lengthFemDes - TIBIA*TIBIA) / (2*FEMUR*lengthFemDes))*180/M_PI + 0.5;
-  uint8_t angleFemur = angleFemur1 + angleFemur2 + 0.5;
+  //a1 = cos⁻¹((Höhe - z0)/ lengthFemDes)
+  float angleFemur1 = acos(((HEIGHT - destination.z) / lengthFemDes))*180.0f/M_PI;
+  //a2 = cos⁻¹((FEMUR² + lengthFemDes² - Tibia²) / (2 * Femur * lengthFemdes))
+  float angleFemur2 = acos((FEMUR*FEMUR + lengthFemDes*lengthFemDes - TIBIA*TIBIA) / (2*FEMUR*lengthFemDes))*180.0f/M_PI;
+  float angleFemur = angleFemur1 + angleFemur2;
 
-  uint8_t angleTibia = acos((FEMUR*FEMUR + TIBIA*TIBIA - lengthFemDes*lengthFemDes) / (2*FEMUR*TIBIA))*180/M_PI + 0.5;
+  float angleTibia = acos((FEMUR*FEMUR + TIBIA*TIBIA - lengthFemDes*lengthFemDes) / (2*FEMUR*TIBIA))*180.0f/M_PI;
 
   //Change angles depending on the position of the leg and the hardware configuration of the servos
   if(mountingAngle == 0 || mountingAngle == 62 || mountingAngle == 298) {
@@ -126,13 +132,16 @@ void Leg::calculateAngles() {
     angleFemur = 225 - angleFemur;
   }
 
-#ifdef DEBUG
-  std::cout << "***********  Angles  **********" << '\n';
-  std::cout << "angleCoxa: " << (unsigned int)angleCoxa << '\n';
-  std::cout << "angleFemur: " << (unsigned int)angleFemur << '\n';
-  std::cout << "angleTibia: " << (unsigned int)angleTibia << '\n';
-  std::cout << "*******************************" << '\n';
-#endif
+  #ifdef DEBUG
+    PRINT(destination);
+    PRINT(lengthLeg);
+    PRINT(lengthFemDes);
+    PRINT(angleFemur1);
+    PRINT(angleFemur2);
+    PRINT(angleCoxa);
+    PRINT(angleFemur);
+    PRINT(angleTibia);
+  #endif
 
   setAngles(angleCoxa, angleFemur, angleTibia);
 }

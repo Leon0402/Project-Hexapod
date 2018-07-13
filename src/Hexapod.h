@@ -1,8 +1,6 @@
 #ifndef HEXAPOD_H
 #define HEXAPOD_H
 
-#include "Controls.h"
-
 #include "Servocontroller.h"
 #include "Leg.h"
 #include "Servo.h"
@@ -29,6 +27,6 @@ private:
   Servocontroller servocontroller1;
   Servocontroller servocontroller2;
   Servo servos[18];
-  Leg legs[3];
+  Leg legs[6];
 };
 #endif //HEXAPOD_H

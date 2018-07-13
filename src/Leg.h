@@ -1,18 +1,18 @@
 #ifndef LEG_H
 #define LEG_H
 
-#include "Controls.h"
-
 #include "Servo.h"
-#include "Point.h"
+#include "util/Point.h"
 
 #ifdef DEBUG
-#include <cstdint>
+  #include <cstdint>
+#else
+ #include <inttypes.h>
 #endif
 
 #define COXA 2.5
 #define FEMUR 8.5
-#define TIBIA 12
+#define TIBIA 11.5
 #define HEIGHT 5 //from femur mounting point
 #define STEPS 1
 
@@ -40,10 +40,11 @@ public:
   */
   void setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia);
 
-  void setCoxaAngles(uint8_t angleCoxa);
+  void setCoxaAngle(uint8_t angleCoxa);
   void setFemurAngle(uint8_t angleFemur);
   void setTibiaAngle(uint8_t angleTibia);
 
+  void setPosition(const Pointf& position);
 
 private:
   void calculateAngles();

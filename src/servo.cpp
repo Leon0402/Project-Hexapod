@@ -4,7 +4,7 @@
   #include <cstdint>
   #include <iostream>
 #else
-  #include <Arduino.h>
+  #include <util/delay.h>
   #include <stdint.h>
 #endif
 
@@ -25,6 +25,6 @@ void Servo::write(uint8_t angle) {
   servocontroller.setPWM(pin,0,off);
 
   #ifndef DEBUG
-  delay(1000);
+  _delay_ms(1000);
   #endif
 }

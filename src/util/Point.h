@@ -1,14 +1,11 @@
 #ifndef POINT_H
 #define POINT_H
 
-#include "Controls.h"
-
 #ifdef DEBUG
-#include <cstdint>
-#include <cmath>
-#include <ostream>
+  #include <cmath>
+  #include <ostream>
 #else
-#include <math.h>
+  #include <math.h>
 #endif
 
 class Pointf {
@@ -19,8 +16,8 @@ public:
 
 	void rotateXY(float angle) {
 		float xAlt = x;
-		x = x*cos(angle * M_PI / 180) - y * sin(angle * M_PI / 180);
-		y = xAlt * sin(angle * M_PI / 180) + y * cos(angle * M_PI / 180);
+		x = x*cos(angle * M_PI / 180.0f) - y * sin(angle * M_PI / 180.0f);
+		y = xAlt * sin(angle * M_PI / 180.0f) + y * cos(angle * M_PI / 180.0f);
 	}
 
 	float x;

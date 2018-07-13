@@ -1,11 +1,11 @@
 #ifndef SERVO_H
 #define SERVO_H
 
-#include "Controls.h"
-
 #include "Servocontroller.h"
 #ifdef DEBUG
-#include <cstdint>
+  #include <cstdint>
+#else
+  #include <inttypes.h>
 #endif
 
 #define ANGLEMAX 180
