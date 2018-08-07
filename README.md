@@ -5,8 +5,15 @@ Provides an API for programming a hexapod.
 Current Status
 
   - Not usable, prealpha, see Feature List
-  - Arduino dependencies removed
 
+Last Changed
+
+  - We wrote our own I2c/Twi Library
+  - New Makefile
+  - Arduino dependencies removed
+  - Give Hexapod Class control over communication with servo controller
+    -> possible to control, which servos/legs move paralell or delayed
+    
 Features
 
   - Control each leg through Inverse Kinematics
@@ -27,15 +34,18 @@ Dependencies
 Requirements (Debian / Ubuntu)
 
   - Install all Dependencies
-  $ apt install gcc-avr
-  $ apt install avrdude
-  $ (apt install build-essential)
+  $ sudo apt install gcc-avr
+  $ sudo apt install avrdude
+  $ (sudo apt install build-essential)
 
   - give yourself access to the ttyUSB0 port
-  $ adduser <username> dialout
+  $ sudo adduser <username> dialout
+  - restart session or reboot
 
 
   Configuration
+
+  --- Will be added ---
 
   Usage
 

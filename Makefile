@@ -53,7 +53,7 @@ $(BINDIR)/$(TARGET).elf: $(objects)
 $(BINDIR)/$(TARGET).hex: $(BINDIR)/$(TARGET).elf
 	avr-objcopy -O ihex -j .data -j .text $(BINDIR)/$(TARGET).elf $(BINDIR)/$(TARGET).hex
 
-install:
+upload:
 	avrdude -p $(MCU) $(PORT) $(BAUD) -c $(PROGRAMMER) -U flash:w:$(BINDIR)/$(TARGET).hex:i
 
 size:

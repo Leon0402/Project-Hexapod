@@ -7,14 +7,12 @@
   #include <util/delay.h>
 #endif
 
-//setzt adresse des Servo Controller -> default = 0x40 und erzeugt TwoWire Objekt zur Übertragung
 Servocontroller::Servocontroller(uint8_t addr)
 : i2caddr{addr}, twi{Twi {100000L}} {
   reset();
   setPWMFreq(50);
 }
 
-//resettet Controller
 void Servocontroller::reset() {
   write8(PCA9685_MODE1, 0x80);
   //allow time for oscillator to stabilize
@@ -23,7 +21,6 @@ void Servocontroller::reset() {
   #endif
 }
 
-//Setzt die Frequenz der PWM Signale
 void Servocontroller::setPWMFreq(float freq) {
   //Calculate prescaler to get the right frequenzy
   //prescale = round(clock/4096*freq) -1
@@ -49,14 +46,18 @@ void Servocontroller::setPWMFreq(float freq) {
   write8(PCA9685_MODE1, oldmode | 0xa0);
 }
 
-//Erzeugt ein PWM Signal am pin pinNum mit dem übergebenem on und off wert im Zyklus
 void Servocontroller::setPWM(uint8_t pinNum, uint16_t on, uint16_t off) {
-    uint8_t buffer[] = {LED0_ON_L+4*pinNum, on, on>>8, off, off>>8};
-    twi.writeTo(i2caddr, buffer, 6);
+    uint8_t buffer[] = {
+      static_cast<uint8_t>(LED0_ON_L+4*pinNum),
+      static_cast<uint8_t>(on),
+      static_cast<uint8_t>(on>>8),
+      static_cast<uint8_t>(off),
+      static_cast<uint8_t>(off>>8)
+    };
+    twi.writeTo(i2caddr, buffer, 5);
 }
 
 /*******************************************************************************************/
-//Hilfsfunktionen
 uint8_t Servocontroller::read8(uint8_t addr) {
     twi.writeTo(i2caddr, &addr, 1);
     uint8_t data;

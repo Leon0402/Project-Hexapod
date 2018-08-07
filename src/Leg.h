@@ -19,44 +19,80 @@
 class Leg {
 public:
   /*!
-  @brief  Instanstiates a Leg with it`s three servos and it's mounting angle and mounting point
+  @brief Instanstiates a Leg with it`s three servos and it's mounting angle and mounting point
   @param legOffset The offset from the rotated mountingPoint on the y-axis
   @param mountingAngle The angle at which the servo is mounted
   @param position The (default) position of the foot
   */
-  Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, float legOffset, uint16_t mountingAngle, Pointf position);
+  Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, Pointf position, const float legOffset, const float mountingAngle);
 
   /*!
-  @brief Moves the leg to the given position in global coordinates with inverse kinematics algorithms
+  @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
   @param destination The destination given in the Hexapod`s coordinate system
   */
-  void moveTo(const Pointf& destination);
+  void calculateMovementTo(Pointf movementPath[], const Pointf& destination) const;
 
   /*!
-  @brief Sets the angles of the coxa, femur and tibia servo
+  @brief Updates the angles of the servos, so the current position can be reached
+  */
+  void updateAngles();
+
+  //getter and setter
+  void setPosition(const Pointf& position) { this->position = position; }
+  Pointf getPosition() const { return this->position; }
+
+  /*!Servo wrapper functions!*/
+
+  /*!
+  @brief Sets the angles of all Servos
   @param angleCoxa angle of the coxa Servo between 0 and  180 degrees
   @param angleFemur angle of the femur Servo between 0 and  180 degrees
   @param angleTibia angle of the tibia Servo between 0 and  180 degrees
   */
-  void setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia);
+  void setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
+    setCoxaAngle(angleCoxa);
+    setFemurAngle(angleFemur);
+    setTibiaAngle(angleTibia);
+  }
 
-  void setCoxaAngle(uint8_t angleCoxa);
-  void setFemurAngle(uint8_t angleFemur);
-  void setTibiaAngle(uint8_t angleTibia);
+  //see discription of "void setAngle(uint8_t angle)" in Servo.h
+  void setCoxaAngle(uint8_t angleCoxa) { this->coxaServo.setAngle(angleCoxa); }
+  //see discription of "void setAngle(uint8_t angle)" in Servo.h
+  void setFemurAngle(uint8_t angleFemur) { this->femurServo.setAngle(angleFemur); }
+  //see discription of "void setAngle(uint8_t angle)" in Servo.h
+  void setTibiaAngle(uint8_t angleTibia) { this->tibiaServo.setAngle(angleTibia); }
 
-  void setPosition(const Pointf& position);
+  //see discription of "uint8_t getPin() const" in Servo.h
+  uint8_t getCoxaPin() const  { return this->coxaServo.getPin();  }
+  //see discription of "uint8_t getPin() const" in Servo.h
+  uint8_t getFemurPin() const { return this->femurServo.getPin(); }
+  //see discription of "uint8_t getPin() const" in Servo.h
+  uint8_t getTibiaPin() const { return this->tibiaServo.getPin(); }
+
+  //see discription of "uint16_t getCoxaOnTime() const" in Servo.h
+  uint16_t getCoxaOnTime() const  { return this->coxaServo.getOnTime(); }
+  //see discription of "uint16_t getCoxaOnTime() const" in Servo.h
+  uint16_t getFemurOnTime() const { return this->femurServo.getOnTime(); }
+  //see discription of "uint16_t getCoxaOnTime() const" in Servo.h
+  uint16_t getTibiaOnTime() const { return this->tibiaServo.getOnTime(); }
 
 private:
-  void calculateAngles();
+  void calculateParabolicMovement(Pointf nextMovementArray[], float nextStep, float slope, float yIntercept, float a, float b, float c) const;
+
+  float calculateCoxaAngle(const Pointf& destination) const;
+  float calculateFemurAngle(const Pointf& destination, float lengthFemDes) const;
+  float calculateTibiaAngle(const Pointf& destination, float lengthFemDes) const;
+
+  bool isLegOnLeftSide() const;
 
   Servo coxaServo;
   Servo femurServo;
   Servo tibiaServo;
 
-  float legOffset;
-  uint16_t mountingAngle;
-
   Pointf position;
+
+  const float legOffset;
+  const float mountingAngle;
 };
 
 #endif //LEG_H

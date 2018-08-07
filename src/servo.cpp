@@ -2,29 +2,32 @@
 
 #ifdef DEBUG
   #include <cstdint>
-  #include <iostream>
 #else
   #include <util/delay.h>
   #include <stdint.h>
 #endif
 
-Servo::Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, uint16_t servoMax)
-: servocontroller(servocontroller), pin(pin), servoMin(servoMin), servoMax(servoMax) {}
+/******************************************************************************************************************************************************/
+//public
+/******************************************************************************************************************************************************/
 
-void Servo::write(uint8_t angle) {
-  //mapt die Winkel zur einer puslänge
-  uint16_t off = ((angle * (servoMax-servoMin) * (uint32_t)2) / (float)ANGLEMAX + 1) / 2 + servoMin;
+Servo::Servo(uint8_t pin, uint16_t servoMin, uint16_t servoMax)
+: angle {0}, pin {pin}, servoMin {servoMin}, servoMax {servoMax} {}
 
-  #ifdef DEBUG
-  std::cout << "angle: " << (unsigned int)angle << '\n';
-  std::cout << "pin: " << (unsigned int)pin << '\n';
-  std::cout << "off: " << off << '\n';
-  #endif
+uint16_t Servo::getOnTime() const {
+  return ((this->angle * (this->servoMax - this->servoMin) * 2.0f) / ANGLEMAX + 1.0f) / 2.0f + this->servoMin;
+}
 
-  //übergibt Werte an Servocontroller
-  servocontroller.setPWM(pin,0,off);
+uint8_t Servo::getPin() const {
+  return this->pin;
+}
 
-  #ifndef DEBUG
-  _delay_ms(1000);
-  #endif
+void Servo::setAngle(uint8_t angle) {
+  if(angle >= 0 && angle <= ANGLEMAX) {
+    this->angle = angle;
+  }
+}
+
+uint8_t Servo::getAngle() const {
+  return this->angle;
 }
