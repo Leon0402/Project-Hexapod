@@ -2,6 +2,12 @@
 
 #include "util/Point.h"
 
+#ifndef DEBUG
+  #include <util/delay.h>
+#else
+  #include <iostream>
+#endif
+
 Hexapod::Hexapod(Servocontroller& servocontroller1, Servocontroller& servocontroller2)
 : servocontroller1 {servocontroller1}, servocontroller2 {servocontroller2},
   servos {
@@ -22,9 +28,69 @@ Hexapod::Hexapod(Servocontroller& servocontroller1, Servocontroller& servocontro
   } {}
 
 void Hexapod::test() {
-  this->legs[MIDDLE_LEFT].setPosition(Pointf { 0.0f,  20.0f, 0.0f });
-  this->legs[MIDDLE_LEFT].updateAngles();
-  servocontroller1.setPWM(this->legs[MIDDLE_LEFT].getCoxaPin(), 0,  this->legs[MIDDLE_LEFT].getCoxaOnTime());
-  servocontroller1.setPWM(this->legs[MIDDLE_LEFT].getFemurPin(), 0,  this->legs[MIDDLE_LEFT].getFemurOnTime());
-  servocontroller1.setPWM(this->legs[MIDDLE_LEFT].getTibiaPin(), 0,  this->legs[MIDDLE_LEFT].getTibiaOnTime());
+  moveLegDirectlyToPoint(this->servocontroller1, FRONT_LEFT, Pointf { 8.0f, 12.0f, 0.0f });
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(this->servocontroller1, MIDDLE_LEFT, Pointf { 0.0f, 12.0f, 0.0f });
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(this->servocontroller1, REAR_LEFT, Pointf { -10.0f, 12.0f, 0.0f });
+
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(this->servocontroller2, FRONT_RIGHT, Pointf { 8.0f, -12.0f, 0.0f });
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(this->servocontroller2, MIDDLE_RIGHT, Pointf { 0.0f, -12.0f, 0.0f });
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(this->servocontroller2, REAR_RIGHT, Pointf { -10.0f, -12.0f, 0.0f });
+
+  for(uint8_t i = 0; i < 3; i++) {
+    _delay_ms(1000);
+    moveLegToPoint(this->servocontroller1, FRONT_LEFT, Pointf { 10.0f, 12.0f, 0.0f });
+    _delay_ms(1000);
+    moveLegToPoint(this->servocontroller2, FRONT_RIGHT, Pointf { 10.0f, -12.0f, 0.0f });
+    _delay_ms(1000);
+    moveLegToPoint(this->servocontroller1, MIDDLE_LEFT, Pointf { 2.0f, 12.0f, 0.0f });
+    _delay_ms(1000);
+    moveLegToPoint(this->servocontroller2, MIDDLE_RIGHT, Pointf { 2.0f, -12.0f, 0.0f });
+    _delay_ms(1000);
+    moveLegToPoint(this->servocontroller1, REAR_LEFT, Pointf { -7.0f, 12.0f, 0.0f });
+    _delay_ms(1000);
+    moveLegToPoint(this->servocontroller2, REAR_RIGHT, Pointf { -7.0f, -12.0f, 0.0f });
+
+    _delay_ms(1000);
+    this->legs[FRONT_LEFT].subCoxaAngle(20);
+    servocontroller1.setPWM(this->legs[FRONT_LEFT].getCoxaPin(), 0,  this->legs[FRONT_LEFT].getCoxaOnTime());
+    this->legs[FRONT_RIGHT].addCoxaAngle(20);
+    servocontroller2.setPWM(this->legs[FRONT_RIGHT].getCoxaPin(), 0,  this->legs[FRONT_RIGHT].getCoxaOnTime());
+    this->legs[MIDDLE_LEFT].subCoxaAngle(20);
+    servocontroller1.setPWM(this->legs[MIDDLE_LEFT].getCoxaPin(), 0,  this->legs[MIDDLE_LEFT].getCoxaOnTime());
+    this->legs[MIDDLE_RIGHT].addCoxaAngle(20);
+    servocontroller2.setPWM(this->legs[MIDDLE_RIGHT].getCoxaPin(), 0,  this->legs[MIDDLE_RIGHT].getCoxaOnTime());
+    this->legs[REAR_LEFT].subCoxaAngle(20);
+    servocontroller1.setPWM(this->legs[REAR_LEFT].getCoxaPin(), 0,  this->legs[REAR_LEFT].getCoxaOnTime());
+    this->legs[REAR_RIGHT].addCoxaAngle(20);
+    servocontroller2.setPWM(this->legs[REAR_RIGHT].getCoxaPin(), 0,  this->legs[REAR_RIGHT].getCoxaOnTime());
+    _delay_ms(1000);
+  }
+}
+
+void Hexapod::moveLegDirectlyToPoint(Servocontroller& servocontroller, int legNumber, const Pointf& destination) {
+  this->legs[legNumber].setPosition(destination);
+  this->legs[legNumber].updateAngles();
+  servocontroller.setPWM(this->legs[legNumber].getCoxaPin(), 0,  this->legs[legNumber].getCoxaOnTime());
+  servocontroller.setPWM(this->legs[legNumber].getFemurPin(), 0,  this->legs[legNumber].getFemurOnTime());
+  servocontroller.setPWM(this->legs[legNumber].getTibiaPin(), 0,  this->legs[legNumber].getTibiaOnTime());
+}
+
+void Hexapod::moveLegToPoint(Servocontroller& servocontroller, int legNumber, const Pointf& destination) {
+
+  Pointf movementPath[STEPS+1];
+  this->legs[legNumber].calculateMovementTo(movementPath, destination);
+
+  for(uint8_t i = 0; i < STEPS+1; i++) {
+    _delay_ms(4);
+    moveLegDirectlyToPoint(servocontroller, legNumber, movementPath[i]);
+
+    #ifdef DEBUG
+      std::cout <<  movementPath[i] << std::endl;
+    #endif
+  }
 }

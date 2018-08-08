@@ -37,6 +37,9 @@ public:
   void setAngle(uint8_t angle);
   uint8_t getAngle() const;
 
+  void addAngle(uint8_t angle) { this->angle += angle; }
+  void subAngle(uint8_t angle) { this->angle -= angle; }
+
 private:
   uint8_t angle;
 

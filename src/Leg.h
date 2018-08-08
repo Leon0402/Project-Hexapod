@@ -14,7 +14,7 @@
 #define FEMUR 8.5
 #define TIBIA 11.5
 #define HEIGHT 5 //from femur mounting point
-#define STEPS 1
+#define STEPS 64
 
 class Leg {
 public:
@@ -61,6 +61,11 @@ public:
   void setFemurAngle(uint8_t angleFemur) { this->femurServo.setAngle(angleFemur); }
   //see discription of "void setAngle(uint8_t angle)" in Servo.h
   void setTibiaAngle(uint8_t angleTibia) { this->tibiaServo.setAngle(angleTibia); }
+
+  //see discription of "void addCoxaAngle(uint8_t angle)" in Servo.h
+  void addCoxaAngle(uint8_t angle) { this->coxaServo.addAngle(angle); }
+  //see discription of "void subCoxaAngle(uint8_t angle)" in Servo.h
+  void subCoxaAngle(uint8_t angle) { this->coxaServo.subAngle(angle); }
 
   //see discription of "uint8_t getPin() const" in Servo.h
   uint8_t getCoxaPin() const  { return this->coxaServo.getPin();  }

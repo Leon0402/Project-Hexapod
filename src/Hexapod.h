@@ -23,6 +23,9 @@ public:
 
   void test();
 
+  void moveLegDirectlyToPoint(Servocontroller& servocontroller, int legNumber, const Pointf& destination);
+  void moveLegToPoint(Servocontroller& servocontroller, int legNumber, const Pointf& destination);
+
 private:
   Servocontroller servocontroller1;
   Servocontroller servocontroller2;
