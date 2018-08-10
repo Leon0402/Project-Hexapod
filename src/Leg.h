@@ -14,7 +14,9 @@
 #define FEMUR 8.5
 #define TIBIA 11.5
 #define HEIGHT 5 //from femur mounting point
-#define STEPS 64
+#define STEPS 50 //max 254
+
+enum class Joint { Coxa, Femur, Tibia };
 
 class Leg {
 public:
@@ -50,36 +52,72 @@ public:
   @param angleTibia angle of the tibia Servo between 0 and  180 degrees
   */
   void setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
-    setCoxaAngle(angleCoxa);
-    setFemurAngle(angleFemur);
-    setTibiaAngle(angleTibia);
+    setAngle(Joint::Coxa, angleCoxa);
+    setAngle(Joint::Femur, angleFemur);
+    setAngle(Joint::Tibia, angleTibia);
   }
 
-  //see discription of "void setAngle(uint8_t angle)" in Servo.h
-  void setCoxaAngle(uint8_t angleCoxa) { this->coxaServo.setAngle(angleCoxa); }
-  //see discription of "void setAngle(uint8_t angle)" in Servo.h
-  void setFemurAngle(uint8_t angleFemur) { this->femurServo.setAngle(angleFemur); }
-  //see discription of "void setAngle(uint8_t angle)" in Servo.h
-  void setTibiaAngle(uint8_t angleTibia) { this->tibiaServo.setAngle(angleTibia); }
+  /*!
+  @brief see discription of "void setAngle(uint8_t angle)" in Servo.h
+  @param joint Determines the servo the setAngle() function should be called on
+  */
+  void setAngle(Joint joint, uint8_t angle) {
+    switch(joint) {
+      case Joint::Coxa:  this->coxaServo.setAngle(angle);   break;
+      case Joint::Femur: this->femurServo.setAngle(angle);  break;
+      case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
+    }
+  }
 
-  //see discription of "void addCoxaAngle(uint8_t angle)" in Servo.h
-  void addCoxaAngle(uint8_t angle) { this->coxaServo.addAngle(angle); }
-  //see discription of "void subCoxaAngle(uint8_t angle)" in Servo.h
-  void subCoxaAngle(uint8_t angle) { this->coxaServo.subAngle(angle); }
+  /*!
+  @brief see discription of "void addAngle(uint8_t angle)" in Servo.h
+  @param joint Determines the servo the addAngle() function should be called on
+  */
+  void addAngle(Joint joint, uint8_t angle) {
+    switch(joint) {
+      case Joint::Coxa:  this->coxaServo.addAngle(angle);   break;
+      case Joint::Femur: this->femurServo.addAngle(angle);  break;
+      case Joint::Tibia:  this->tibiaServo.addAngle(angle); break;
+    }
+  }
 
-  //see discription of "uint8_t getPin() const" in Servo.h
-  uint8_t getCoxaPin() const  { return this->coxaServo.getPin();  }
-  //see discription of "uint8_t getPin() const" in Servo.h
-  uint8_t getFemurPin() const { return this->femurServo.getPin(); }
-  //see discription of "uint8_t getPin() const" in Servo.h
-  uint8_t getTibiaPin() const { return this->tibiaServo.getPin(); }
+  /*!
+  @brief see discription of "void subAngle(uint8_t angle)" in Servo.h
+  @param joint Determines the servo the subAngle() function should be called on
+  */
+  void subAngle(Joint joint, uint8_t angle) {
+    switch(joint) {
+      case Joint::Coxa:  this->coxaServo.subAngle(angle);   break;
+      case Joint::Femur: this->femurServo.subAngle(angle);  break;
+      case Joint::Tibia:  this->tibiaServo.subAngle(angle); break;
+    }
+  }
 
-  //see discription of "uint16_t getCoxaOnTime() const" in Servo.h
-  uint16_t getCoxaOnTime() const  { return this->coxaServo.getOnTime(); }
-  //see discription of "uint16_t getCoxaOnTime() const" in Servo.h
-  uint16_t getFemurOnTime() const { return this->femurServo.getOnTime(); }
-  //see discription of "uint16_t getCoxaOnTime() const" in Servo.h
-  uint16_t getTibiaOnTime() const { return this->tibiaServo.getOnTime(); }
+  /*!
+  @brief see discription of "uint8_t getPin() const" in Servo.h
+  @param joint Determines the servo the getPin() function should be called on
+  */
+  uint8_t getPin(Joint joint) {
+    switch(joint) {
+      case Joint::Coxa:  return this->coxaServo.getPin();  break;
+      case Joint::Femur: return this->femurServo.getPin(); break;
+      case Joint::Tibia: return this->tibiaServo.getPin(); break;
+      default: return 0;
+    }
+  }
+
+  /*!
+  @brief see discription of "uint16_t getOnTime() const" in Servo.h
+  @param joint Determines the servo the getOnTime() function should be called on
+  */
+  uint16_t getOnTime(Joint joint) {
+    switch(joint) {
+      case Joint::Coxa:  return this->coxaServo.getOnTime();  break;
+      case Joint::Femur: return this->femurServo.getOnTime(); break;
+      case Joint::Tibia: return this->tibiaServo.getOnTime(); break;
+      default: return 0;
+    }
+  }
 
 private:
   void calculateParabolicMovement(Pointf nextMovementArray[], float nextStep, float slope, float yIntercept, float a, float b, float c) const;

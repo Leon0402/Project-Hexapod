@@ -5,12 +5,7 @@
 #include "Leg.h"
 #include "Servo.h"
 
-#define FRONT_LEFT 0
-#define MIDDLE_LEFT 1
-#define REAR_LEFT 2
-#define REAR_RIGHT 3
-#define MIDDLE_RIGHT 4
-#define FRONT_RIGHT 5
+enum class LegPosition { FrontLeft, MiddleLeft, RearLeft, FrontRight, MiddleRight, RearRight};
 
 class Hexapod {
 public:
@@ -23,8 +18,8 @@ public:
 
   void test();
 
-  void moveLegDirectlyToPoint(Servocontroller& servocontroller, int legNumber, const Pointf& destination);
-  void moveLegToPoint(Servocontroller& servocontroller, int legNumber, const Pointf& destination);
+  void moveLegDirectlyToPoint(Servocontroller& servocontroller, LegPosition legPosition, const Pointf& destination);
+  void moveLegToPoint(Servocontroller& servocontroller, LegPosition legPosition, const Pointf& destination);
 
 private:
   Servocontroller servocontroller1;
