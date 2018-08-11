@@ -6,23 +6,24 @@ Current Status
 
   - Not usable, prealpha, see Feature List
 
-Last Changed
+Latest Changed
 
-  - We wrote our own I2c/Twi Library
-  - New Makefile
-  - Arduino dependencies removed
-  - Give Hexapod Class control over communication with servo controller
-    -> possible to control, which servos/legs move paralell or delayed
-    
+  - More typesafety by using enumerations instead of "#defines"
+  -> One function to acces pin/onTime/angle instead of one function for every servo
+  - test script for moving forward added
+
 Features
 
   - Control each leg through Inverse Kinematics
-  - Legs move from one point to the other in a more realistic way (following a quadratic function)
+  - Legs follow a quadratic function when moving (up to 254 intermediate steps)
+  - Performant i2c/twi library, no need for Arduino dependencies
+  - Debug modus: Print out angles and points
 
-Next Steps:
+Next Steps
 
-  - paralell movement of servos!!!
   - Add some test scripts for translation and rotation of the hexapod
+  - make "#defines" in Leg.h static const members instead?
+  - Add enhancements for controlling the Hexapod (Web, joystick ...)
 
 Dependencies
 
@@ -34,12 +35,12 @@ Dependencies
 Requirements (Debian / Ubuntu)
 
   - Install all Dependencies
-  $ sudo apt install gcc-avr
-  $ sudo apt install avrdude
-  $ (sudo apt install build-essential)
+  -> $ sudo apt install gcc-avr
+  -> $ sudo apt install avrdude
+  -> $ (sudo apt install build-essential)
 
   - give yourself access to the ttyUSB0 port
-  $ sudo adduser <username> dialout
+  -> $ sudo adduser <username> dialout
   - restart session or reboot
 
 
