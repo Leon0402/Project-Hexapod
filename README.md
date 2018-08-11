@@ -6,7 +6,7 @@ Current Status
 
   - Not usable, prealpha, see Feature List
 
-Latest Changed
+Latest Changes
 
   - More typesafety by using enumerations instead of "#defines"
   -> One function to acces pin/onTime/angle instead of one function for every servo
