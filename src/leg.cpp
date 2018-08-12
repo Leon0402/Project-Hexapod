@@ -12,7 +12,7 @@
 //public
 /******************************************************************************************************************************************************/
 
-Leg::Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
+Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
 : coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo}, position {position}, legOffset {legOffset}, mountingAngle {mountingAngle} {}
 
 
