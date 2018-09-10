@@ -8,6 +8,7 @@
   #include <iostream>
 #endif
 
+<<<<<<< HEAD
 Hexapod::Hexapod()
 : servocontroller1 { Servocontroller {0x40}}, servocontroller2 {Servocontroller {0x41}},
   legs {
@@ -19,6 +20,17 @@ Hexapod::Hexapod()
     Leg { Servo {servocontroller2, 13, 130, 440}, Servo {servocontroller2, 14,  85, 455}, Servo {servocontroller2, 15,  85, 380}, Pointf { 11.5f, -14.5f, 0.0f}, 8.5f, 118},
     Leg { Servo {servocontroller2,  5, 125, 415}, Servo {servocontroller2,  6,  90, 454}, Servo {servocontroller2,  7,  89, 445}, Pointf {  0.0f, -15.0f, 0.0f}, 6.5f, 180},
     Leg { Servo {servocontroller2,  0,  85, 445}, Servo {servocontroller2,  1, 130, 430}, Servo {servocontroller2,  2,  85, 389}, Pointf {-11.5f, -14.5f, 0.0f}, 8.5f, 242}
+=======
+Hexapod::Hexapod(Servocontroller& servocontroller1, Servocontroller& servocontroller2)
+: servocontroller1 {servocontroller1}, servocontroller2 {servocontroller2},
+  legs {
+    Leg { Servo { 0, 105, 465}, Servo { 1,  95, 472}, Servo { 2, 135, 510}, Pointf { 11.5f,  14.5f, 0.0f}, 8.5f,  62},
+    Leg { Servo { 5, 130, 400}, Servo { 6, 100, 475}, Servo { 7,  92, 445}, Pointf {  0.0f,  15.0f, 0.0f}, 6.5f,   0},
+    Leg { Servo {13, 100, 450}, Servo {14, 132, 492}, Servo {15, 110, 475}, Pointf {-11.5f,  14.5f, 0.0f}, 8.5f, 298},
+    Leg { Servo { 0,  85, 445}, Servo { 1, 130, 430}, Servo { 2,  85, 389}, Pointf {-11.5f, -14.5f, 0.0f}, 8.5f, 242},
+    Leg { Servo { 5, 125, 415}, Servo { 6,  90, 454}, Servo { 7,  89, 445}, Pointf {  0.0f, -15.0f, 0.0f}, 6.5f, 180},
+    Leg { Servo {13, 130, 440}, Servo {14,  85, 455}, Servo {15,  85, 380}, Pointf { 11.5f, -14.5f, 0.0f}, 8.5f, 118}
+>>>>>>> 788df7600ed8d2195db7387da2d44e901ce40c31
   } {
     //Initial Position
     /*
