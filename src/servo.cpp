@@ -2,32 +2,53 @@
 
 #ifdef DEBUG
   #include <cstdint>
+  #include <cmath>
+  #include <iostream>
 #else
-  #include <util/delay.h>
   #include <stdint.h>
+  #include <stdlib.h>
+  #include <time.h>
 #endif
 
 /******************************************************************************************************************************************************/
-//public
+// public
 /******************************************************************************************************************************************************/
 
-Servo::Servo(uint8_t pin, uint16_t servoMin, uint16_t servoMax)
-: angle {0}, pin {pin}, servoMin {servoMin}, servoMax {servoMax} {}
+Servo::Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, uint16_t servoMax)
+: servocontroller {servocontroller}, currentPulseWidth{(servoMin+servoMax)/2},
+destinationPulseWidth{currentPulseWidth}, pin {pin}, servoMin {servoMin}, servoMax {servoMax} {}
 
-uint16_t Servo::getOnTime() const {
-  return ((this->angle * (this->servoMax - this->servoMin) * 2.0f) / ANGLEMAX + 1.0f) / 2.0f + this->servoMin;
-}
+void Servo::update(uint32_t currentMillis) {
+  if(this->isActive && ((currentMillis - this->lastUpdate) - this->updateInterval)) {
+    this->lastUpdate = time(nullptr);
 
-uint8_t Servo::getPin() const {
-  return this->pin;
-}
+    if(this->currentPulseWidth != this->destinationPulseWidth) {
 
-void Servo::setAngle(uint8_t angle) {
-  if(angle >= 0 && angle <= ANGLEMAX) {
-    this->angle = angle;
+      if(this->currentPulseWidth < this->destinationPulseWidth) {
+        ++this->currentPulseWidth;
+      } else {
+        --this->currentPulseWidth;
+      }
+      this->servocontroller.setPWM(this->pin, 0, this->currentPulseWidth);
+    } else {
+      this->isActive = true;
+    }
   }
 }
 
-uint8_t Servo::getAngle() const {
-  return this->angle;
+void Servo::move(uint16_t time) {
+  float difference = abs(this->destinationPulseWidth - this->currentPulseWidth);
+  this->updateInterval = time/difference;
+}
+
+void Servo::setAngle(uint8_t angle) {
+  this->destinationPulseWidth = mapToPulseWidth(angle);
+}
+
+/******************************************************************************************************************************************************/
+// private
+/******************************************************************************************************************************************************/
+
+uint16_t Servo::mapToPulseWidth(uint8_t angle) {
+  return ((angle * (this->servoMax - this->servoMin) * 2.0f) / Servo::servoRange + 1.0f) / 2.0f + this->servoMin;
 }

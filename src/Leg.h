@@ -6,6 +6,7 @@
 
 #ifdef DEBUG
   #include <cstdint>
+  #include <iostream>
 #else
  #include <inttypes.h>
 #endif
@@ -13,7 +14,7 @@
 #define COXA 2.5
 #define FEMUR 8.5
 #define TIBIA 11.5
-#define HEIGHT 5 //from femur mounting point
+#define HEIGHT 7 //from femur mounting point
 #define STEPS 50 //max 254
 
 enum class Joint { Coxa, Femur, Tibia };
@@ -28,6 +29,7 @@ public:
   */
   Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle);
 
+  void update(uint32_t currentMillis);
   /*!
   @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
   @param destination The destination given in the Hexapod`s coordinate system
@@ -51,7 +53,7 @@ public:
   @param angleFemur angle of the femur Servo between 0 and  180 degrees
   @param angleTibia angle of the tibia Servo between 0 and  180 degrees
   */
-  void setAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
+  void setAllAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
     setAngle(Joint::Coxa, angleCoxa);
     setAngle(Joint::Femur, angleFemur);
     setAngle(Joint::Tibia, angleTibia);
@@ -66,56 +68,30 @@ public:
       case Joint::Coxa:  this->coxaServo.setAngle(angle);   break;
       case Joint::Femur: this->femurServo.setAngle(angle);  break;
       case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
+      default: {
+        #ifdef DEBUG
+        std::cout << "This joint is not available" << '\n';
+        #endif
+      }
     }
   }
 
-  /*!
-  @brief see discription of "void addAngle(uint8_t angle)" in Servo.h
-  @param joint Determines the servo the addAngle() function should be called on
-  */
-  void addAngle(Joint joint, uint8_t angle) {
-    switch(joint) {
-      case Joint::Coxa:  this->coxaServo.addAngle(angle);   break;
-      case Joint::Femur: this->femurServo.addAngle(angle);  break;
-      case Joint::Tibia:  this->tibiaServo.addAngle(angle); break;
-    }
+  void moveAll(uint16_t time = 0) {
+    move(Joint::Coxa, time);
+    move(Joint::Femur, time);
+    move(Joint::Tibia, time);
   }
 
-  /*!
-  @brief see discription of "void subAngle(uint8_t angle)" in Servo.h
-  @param joint Determines the servo the subAngle() function should be called on
-  */
-  void subAngle(Joint joint, uint8_t angle) {
+  void move(Joint joint, uint16_t time = 0) {
     switch(joint) {
-      case Joint::Coxa:  this->coxaServo.subAngle(angle);   break;
-      case Joint::Femur: this->femurServo.subAngle(angle);  break;
-      case Joint::Tibia:  this->tibiaServo.subAngle(angle); break;
-    }
-  }
-
-  /*!
-  @brief see discription of "uint8_t getPin() const" in Servo.h
-  @param joint Determines the servo the getPin() function should be called on
-  */
-  uint8_t getPin(Joint joint) {
-    switch(joint) {
-      case Joint::Coxa:  return this->coxaServo.getPin();  break;
-      case Joint::Femur: return this->femurServo.getPin(); break;
-      case Joint::Tibia: return this->tibiaServo.getPin(); break;
-      default: return 0;
-    }
-  }
-
-  /*!
-  @brief see discription of "uint16_t getOnTime() const" in Servo.h
-  @param joint Determines the servo the getOnTime() function should be called on
-  */
-  uint16_t getOnTime(Joint joint) {
-    switch(joint) {
-      case Joint::Coxa:  return this->coxaServo.getOnTime();  break;
-      case Joint::Femur: return this->femurServo.getOnTime(); break;
-      case Joint::Tibia: return this->tibiaServo.getOnTime(); break;
-      default: return 0;
+      case Joint::Coxa:  this->coxaServo.move(time);   break;
+      case Joint::Femur: this->femurServo.move(time);  break;
+      case Joint::Tibia:  this->tibiaServo.move(time); break;
+      default: {
+        #ifdef DEBUG
+        std::cout << "This joint is not available" << '\n';
+        #endif
+      }
     }
   }
 

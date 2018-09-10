@@ -16,6 +16,12 @@ Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf posit
 : coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo}, position {position}, legOffset {legOffset}, mountingAngle {mountingAngle} {}
 
 
+void Leg::update(uint32_t currentMillis) {
+  coxaServo.update(currentMillis);
+  femurServo.update(currentMillis);
+  tibiaServo.update(currentMillis);
+}
+
 void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) const {
 
   // Calculates distance between position.x and destination.x and divides it through the number of steps bewteen these positions + 1
@@ -32,7 +38,8 @@ void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) 
   // Sets up a function equation (square) to resolve a z value to a x value
   // P0 = starting point, P1 = highest point, P2 = endpoint
   //a = (z2 + z0 - 2z1 - 2* sqrt(z0*z2 - z2*z1 - z0*z1 + z1*z1)) / (x0-x2)²
-  float a = (destination.z + position.z - 2*HEIGHT - 2*sqrt(position.z*destination.z - destination.z*HEIGHT - position.z*HEIGHT + HEIGHT*HEIGHT)) / ((position.x - destination.x)*(position.x - destination.x));
+  float height = 4;
+  float a = (destination.z + position.z - 2*height - 2*sqrt(position.z*destination.z - destination.z*height - position.z*height + height*height)) / ((position.x - destination.x)*(position.x - destination.x));
   //b = -1*(a*x2*x2 + z0 - a*x0*x0 - z2) / (-2*a*t2 + 2*a*t0)
   float b = -1.0f*(a*destination.x*destination.x + position.z - a*position.x*position.x - destination.z) / (-2*a*destination.x + 2*a*position.x);
   //c = z1 = HEIGHT
@@ -46,7 +53,7 @@ void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) 
   PRINT(HEIGHT);
   #endif
 
-  calculateParabolicMovement(movementPath, nextStep, slope, yIntercept, a, b, HEIGHT);
+  calculateParabolicMovement(movementPath, nextStep, slope, yIntercept, a, b, height);
 }
 
 
@@ -62,7 +69,7 @@ void Leg::updateAngles() {
   float angleFemur = calculateFemurAngle(destination, lengthFemDes);
   float angleTibia = calculateTibiaAngle(destination, lengthFemDes);
 
-  setAngles(angleCoxa, angleFemur, angleTibia);
+  setAllAngles(angleCoxa, angleFemur, angleTibia);
 }
 
 /******************************************************************************************************************************************************/
@@ -84,7 +91,7 @@ void Leg::calculateParabolicMovement(Pointf movementPath[], float nextStep, floa
 }
 
 float Leg::calculateCoxaAngle(const Pointf& destination) const {
-  float angleCoxa = atan(destination.x/destination.y)*180.0f/M_PI + ANGLEMAX/2.0f;
+  float angleCoxa = atan(destination.x/destination.y)*180.0f/M_PI + Servo::servoRange/2.0f;
 
   #ifdef DEBUG
   PRINT(angleCoxa);

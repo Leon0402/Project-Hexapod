@@ -11,15 +11,15 @@ class Hexapod {
 public:
   /*!
   @brief  Instanstiates the Hexapod with it's legs and servocontrollers
-  @param  servocontroller1 the three left legs are connected to this servocontroller
-  @param  conServocontroller the three right legs are connected to this servocontroller
   */
-  Hexapod(Servocontroller& servocontroller1, Servocontroller& servocontroller2);
+  Hexapod();
+
+  void update(uint32_t currentMillis);
 
   void test();
 
-  void moveLegDirectlyToPoint(Servocontroller& servocontroller, LegPosition legPosition, const Pointf& destination);
-  void moveLegToPoint(Servocontroller& servocontroller, LegPosition legPosition, const Pointf& destination);
+  void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0, uint16_t waitTime = 0);
+  void moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time);
 
 private:
   Servocontroller servocontroller1;
