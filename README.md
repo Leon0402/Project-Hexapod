@@ -55,6 +55,7 @@ Provides an API for programming a hexapod.
 ### Team
 
 - @Leon0402 (Project manager)
+- [@Grifting](https://github.com/grifting)
 - @Grifting
 - @mirdoga
 - @GhostJumper
