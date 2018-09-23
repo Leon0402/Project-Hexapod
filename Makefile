@@ -32,18 +32,19 @@ debug: CXXFLAGS += -D DEBUG=1
 debug: CXX = g++
 debug: $(BINDIR)/$(TARGET)
 
-arduino: LDFLAGS += -Os -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+arduino: LDFLAGS += -Os  -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 arduino: CXXFLAGS += -Os -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -D F_CPU=$(F_CPU)
 arduino: $(BINDIR)/$(TARGET).hex
+
+# General
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
 # Debug
 $(BINDIR)/$(TARGET): $(objects)
 	mkdir -p $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -o $@ $<
 
 # Arduino
 $(BINDIR)/$(TARGET).elf: $(objects)

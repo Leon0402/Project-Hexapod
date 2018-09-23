@@ -14,8 +14,6 @@ public:
   */
   Hexapod();
 
-  void update(uint32_t currentMillis);
-
   void test();
 
   void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0, uint16_t waitTime = 0);

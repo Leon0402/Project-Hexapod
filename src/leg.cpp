@@ -11,16 +11,8 @@
 /******************************************************************************************************************************************************/
 //public
 /******************************************************************************************************************************************************/
-
-Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
+Leg::Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
 : coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo}, position {position}, legOffset {legOffset}, mountingAngle {mountingAngle} {}
-
-
-void Leg::update(uint32_t currentMillis) {
-  coxaServo.update(currentMillis);
-  femurServo.update(currentMillis);
-  tibiaServo.update(currentMillis);
-}
 
 void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) const {
 
@@ -91,7 +83,7 @@ void Leg::calculateParabolicMovement(Pointf movementPath[], float nextStep, floa
 }
 
 float Leg::calculateCoxaAngle(const Pointf& destination) const {
-  float angleCoxa = atan(destination.x/destination.y)*180.0f/M_PI + Servo::servoRange/2.0f;
+  float angleCoxa = atan(destination.x/destination.y)*180.0f/M_PI + Servo::angleRange/2.0f;
 
   #ifdef DEBUG
   PRINT(angleCoxa);
