@@ -1,11 +1,11 @@
 #ifndef POINT_H
 #define POINT_H
 
-#ifdef DEBUG
+#ifndef X86_64
+  #include <math.h>
+#else
   #include <cmath>
   #include <ostream>
-#else
-  #include <math.h>
 #endif
 
 class Pointf {
@@ -25,7 +25,7 @@ public:
 	float z;
 };
 
-#ifdef DEBUG
+#ifdef X86_64
 inline std::ostream& operator<<(std::ostream& os, const Pointf& point) {
 	os << '(' << point.x << '/' << point.y << '/' << point.z << ')';
 	return os;
@@ -33,8 +33,3 @@ inline std::ostream& operator<<(std::ostream& os, const Pointf& point) {
 #endif
 
 #endif //POINT_H
-
-
-/*
-cos takes radian, returns degrees
-*/

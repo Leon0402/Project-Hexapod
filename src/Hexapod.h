@@ -3,7 +3,6 @@
 
 #include "Servocontroller.h"
 #include "Leg.h"
-#include "Servo.h"
 
 enum class LegPosition { FrontLeft, MiddleLeft, RearLeft, FrontRight, MiddleRight, RearRight};
 
@@ -14,10 +13,31 @@ public:
   */
   Hexapod();
 
+  /*!
+  @brief Updates all legs
+  @param currentMillis time passed in milliseconds
+  */
+  void update(uint32_t currentMillis);
+
+  /*!
+  @brief Some test scripts, moves forwards
+  */
   void test();
 
-  void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0, uint16_t waitTime = 0);
-  void moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time);
+  /*!
+  @brief Moves a leg to a point in the global coordinate system in the given time
+  @param legPosition position of the leg (see LegPosition Enum)
+  @param desination point in the global coordinate system
+  @param time time in milliseconds
+  */
+  void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
+  /*!
+  @brief Moves a leg to a point in the global coordinate system in the given time following a parabolic function
+  @param legPosition position of the leg (see LegPosition Enum)
+  @param desination point in the global coordinate system
+  @param time time in milliseconds
+  */
+  void moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
 
 private:
   Servocontroller servocontroller1;

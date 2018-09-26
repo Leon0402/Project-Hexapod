@@ -3,14 +3,14 @@
 
 #include "Servocontroller.h"
 
-#ifdef DEBUG
-  #include <cstdint>
-  #define F_CPU 16000000
-#else
+#ifndef X86_64
   #include <inttypes.h>
-  #include <avr/io.h>
-  #include <avr/interrupt.h>
-  #include "Stream.h"
+#else
+  #include <cstdint>
+#endif
+
+#ifndef F_CPU
+  #define F_CPU 16000000
 #endif
 
 class Servo {
@@ -23,8 +23,6 @@ public:
   @param servoMax Maximum pulse length out of 4096 (12-Bit PWM)
   */
   Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, uint16_t servoMax);
-
-  Servo(const Servo& servo) = delete;
 
   void update(uint32_t currentMillis);
 

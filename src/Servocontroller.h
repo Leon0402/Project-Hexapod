@@ -1,13 +1,13 @@
 #ifndef SERVOCONTROLLER_H
 #define SERVOCONTROLLER_H
 
-#ifdef DEBUG
-  #include <cstdint>
-#else 
-  #include <inttypes.h>
-#endif
-
 #include "Twi.h"
+
+#ifndef X86_64
+  #include <inttypes.h>
+#else
+  #include <cstdint>
+#endif
 
 #define PCA9685_MODE1 0x0
 #define PCA9685_PRESCALE 0xFE

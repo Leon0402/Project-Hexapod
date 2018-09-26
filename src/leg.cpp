@@ -1,18 +1,22 @@
 #include "Leg.h"
 
-#ifdef DEBUG
-  #include <cmath>
-  #include <iostream>
-  #define PRINT(X) std::cout << (#X) << '\t' << (X) << std::endl;
-#else
+#ifndef X86_64
   #include <math.h>
+#else
+  #include <cmath>
 #endif
 
 /******************************************************************************************************************************************************/
 //public
 /******************************************************************************************************************************************************/
-Leg::Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
+Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
 : coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo}, position {position}, legOffset {legOffset}, mountingAngle {mountingAngle} {}
+
+void Leg::update(uint32_t currentMillis) {
+  coxaServo.update(currentMillis);
+  femurServo.update(currentMillis);
+  tibiaServo.update(currentMillis);
+}
 
 void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) const {
 
@@ -35,15 +39,6 @@ void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) 
   //b = -1*(a*x2*x2 + z0 - a*x0*x0 - z2) / (-2*a*t2 + 2*a*t0)
   float b = -1.0f*(a*destination.x*destination.x + position.z - a*position.x*position.x - destination.z) / (-2*a*destination.x + 2*a*position.x);
   //c = z1 = HEIGHT
-
-  #ifdef DEBUG
-  PRINT(nextStep);
-  PRINT(slope);
-  PRINT(yIntercept);
-  PRINT(a);
-  PRINT(b);
-  PRINT(HEIGHT);
-  #endif
 
   calculateParabolicMovement(movementPath, nextStep, slope, yIntercept, a, b, height);
 }
@@ -83,13 +78,7 @@ void Leg::calculateParabolicMovement(Pointf movementPath[], float nextStep, floa
 }
 
 float Leg::calculateCoxaAngle(const Pointf& destination) const {
-  float angleCoxa = atan(destination.x/destination.y)*180.0f/M_PI + Servo::angleRange/2.0f;
-
-  #ifdef DEBUG
-  PRINT(angleCoxa);
-  #endif
-
-  return angleCoxa;
+  return atan(destination.x/destination.y)*180.0f/M_PI + Servo::angleRange/2.0f;
 }
 
 float Leg::calculateFemurAngle(const Pointf& destination, float lengthFemDes) const {
@@ -98,10 +87,6 @@ float Leg::calculateFemurAngle(const Pointf& destination, float lengthFemDes) co
   //a2 = cos⁻¹((FEMUR² + lengthFemDes² - Tibia²) / (2 * Femur * lengthFemdes))
   float angleFemur2 = acos((FEMUR*FEMUR + lengthFemDes*lengthFemDes - TIBIA*TIBIA) / (2*FEMUR*lengthFemDes))*180.0f/M_PI;
   float angleFemur = angleFemur1 + angleFemur2;
-
-  #ifdef DEBUG
-  PRINT(angleFemur);
-  #endif
 
   if(isLegOnLeftSide()) {
     angleFemur -= 45;
@@ -115,10 +100,6 @@ float Leg::calculateFemurAngle(const Pointf& destination, float lengthFemDes) co
 
 float Leg::calculateTibiaAngle(const Pointf& destination, float lengthFemDes) const {
   float angleTibia = acos((FEMUR*FEMUR + TIBIA*TIBIA - lengthFemDes*lengthFemDes) / (2*FEMUR*TIBIA))*180.0f/M_PI;
-
-  #ifdef DEBUG
-  PRINT(angleTibia);
-  #endif
 
   if(isLegOnLeftSide()) {
     angleTibia = 180 - angleTibia;

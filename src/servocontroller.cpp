@@ -1,10 +1,10 @@
 #include "Servocontroller.h"
 
-#ifdef DEBUG
-  #include <cmath>
-#else
+#ifndef X86_64
   #include <math.h>
   #include <util/delay.h>
+#else
+  #include <cmath>
 #endif
 
 Servocontroller::Servocontroller(uint8_t addr)
@@ -16,7 +16,7 @@ Servocontroller::Servocontroller(uint8_t addr)
 void Servocontroller::reset() {
   write8(PCA9685_MODE1, 0x80);
   //allow time for oscillator to stabilize
-  #ifndef DEBUG
+  #ifndef X86_64
   _delay_us(500);
   #endif
 }
@@ -38,7 +38,7 @@ void Servocontroller::setPWMFreq(float freq) {
   write8(PCA9685_MODE1, oldmode);
 
   //allow time for oscillator to stabilize
-  #ifndef DEBUG
+  #ifndef X86_64
   _delay_us(500);
   #endif
 

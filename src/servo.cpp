@@ -1,33 +1,29 @@
-#include "Servo.h"
+ #include "Servo.h"
 
-#ifdef DEBUG
-  #include <cstdint>
-  #include <cmath>
-  #include <iostream>
-#else
+ #ifndef X86_64
+  #include <time.h>
   #include <stdint.h>
   #include <stdlib.h>
-  #include <time.h>
-  #include "Stream.h"
+#else
+  #include <cstdint>
+  #include <stdlib.h>
 #endif
 
 /******************************************************************************************************************************************************/
 // public
 /******************************************************************************************************************************************************/
-
 Servo::Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, uint16_t servoMax)
 : servocontroller {servocontroller}, pulseWidth{(servoMin+servoMax)/2}, destinationPulseWidth{pulseWidth},
   pin {pin}, servoMin {servoMin}, servoMax {servoMax}, pulseWidthRange {mapToPulseWidth(Servo::angleRange)} {}
 
 void Servo::update(uint32_t currentMillis) {
-  avr::cout << this->pin << '\t' << this->active << '\n';
-
   if(this->active) {
-    avr::cout << "Hallo" << '\n';
-    //Apply acceleration
-    uint16_t velocityAddition = this->acceleration*(currentMillis - this->lastUpdate) + 0.5;
+
+    int16_t velocityAddition;
 
     if(this->acceleration > 0) {
+      velocityAddition = this->acceleration*(currentMillis - this->lastUpdate) + 0.5;
+
       if(velocityAddition == 0) {
         velocityAddition = 1;
       }
@@ -37,6 +33,8 @@ void Servo::update(uint32_t currentMillis) {
         this->velocity += velocityAddition;
       }
     } else if (this->acceleration < 0) {
+      velocityAddition = this->acceleration*(currentMillis - this->lastUpdate) - 0.5;
+
       if(velocityAddition == 0) {
         velocityAddition = -1;
       }
@@ -47,17 +45,16 @@ void Servo::update(uint32_t currentMillis) {
       }
     }
 
-    avr::err.println("**********");
-    avr::err << this->pulseWidth << '\t' << this->destinationPulseWidth << '\n';
-
-    //Apply velocity
-    uint16_t movementAddition = this->velocity*(currentMillis - this->lastUpdate) + 0.5;
+    int16_t movementAddition;
 
     if(this->velocity > 0) {
+      movementAddition = this->velocity*(currentMillis - this->lastUpdate) + 0.5;
+
       if(movementAddition == 0) {
         movementAddition = 1;
+        //"Please make ISR slower or movement faster"
       }
-      if(movementAddition >= (this->destinationPulseWidth - this->pulseWidth)) {
+      if(movementAddition >= ((int16_t)this->destinationPulseWidth - (int16_t)this->pulseWidth)) {
         this->pulseWidth = this->destinationPulseWidth;
         //Movement is finished at the end of the update method, so set active to false
         this->active = false;
@@ -65,10 +62,13 @@ void Servo::update(uint32_t currentMillis) {
         this->pulseWidth += movementAddition;
       }
     } else if(this->velocity < 0){
+      movementAddition = this->velocity*(currentMillis - this->lastUpdate) - 0.5;
+
       if(movementAddition == 0) {
         movementAddition = -1;
+        //"Please make ISR slower or movement faster"
       }
-      if(movementAddition <= (this->destinationPulseWidth - this->pulseWidth)) {
+      if(movementAddition <= ((int16_t)this->destinationPulseWidth - (int16_t)this->pulseWidth)) {
         this->pulseWidth = this->destinationPulseWidth;
         //Movement is finished at the end of the update method, so set active to false
         this->active = false;
@@ -76,19 +76,15 @@ void Servo::update(uint32_t currentMillis) {
         this->pulseWidth += movementAddition;
       }
     }
-
-    avr::err.println(movementAddition);
-    avr::err << this->pulseWidth << '\t' << this->destinationPulseWidth << '\n';
-    avr::err.println("**********");
-
     //Move servo
     this->servocontroller.setPWM(this->pin, 0, this->pulseWidth);
   }
+  #ifndef X86_64
   this->lastUpdate = time(nullptr);
+  #endif
 }
 
 void Servo::move(float speed, float targetSpeed, float acceleration) {
-  avr::cout << speed << '\t' << targetSpeed << '\t' << acceleration << '\n';
   //If servo has already reached its destinationPulseWidth do not change status to active
   if(this->pulseWidth == this->destinationPulseWidth || speed == 0.0f) {
     return;
@@ -104,13 +100,10 @@ void Servo::move(float speed, float targetSpeed, float acceleration) {
     this->acceleration = -acceleration;
   }
   this->active = true;
-  avr::cout << "Pin: " << this->pin << '\t' << this->active << '\n';
 }
 
 void Servo::move(uint16_t time) {
-  avr::cout << "move(time): " << this->pin << '\t' << time << '\n';
-
-  float difference = abs(this->destinationPulseWidth - this->pulseWidth);
+  float difference = abs((int16_t)this->destinationPulseWidth - (int16_t)this->pulseWidth);
   if(time != 0) {
     move(difference/time, this->pulseWidthRange, 0.0f);
   } else {
@@ -125,7 +118,6 @@ void Servo::setAngle(uint8_t angle) {
 /******************************************************************************************************************************************************/
 // private
 /******************************************************************************************************************************************************/
-
 uint16_t Servo::mapToPulseWidth(uint8_t angle) {
   return ((angle * (this->servoMax - this->servoMin) * 2.0f) / Servo::angleRange + 1.0f) / 2.0f + this->servoMin;
 }

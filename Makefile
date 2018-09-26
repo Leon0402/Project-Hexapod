@@ -28,7 +28,7 @@ objects  := $(subst $(SRCDIR)/, $(OBJDIR)/, $(cppfiles:.cpp=.o))
 
 default all: arduino
 
-debug: CXXFLAGS += -D DEBUG=1
+debug: CXXFLAGS += -D X86_64=1
 debug: CXX = g++
 debug: $(BINDIR)/$(TARGET)
 

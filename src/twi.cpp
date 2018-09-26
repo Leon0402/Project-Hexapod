@@ -1,14 +1,12 @@
 #include "Twi.h"
 
-#ifndef DEBUG
+#ifndef X86_64
   #include <util/twi.h>
   #include <avr/io.h>
-#else
-  #include <iostream>
 #endif
 
 Twi::Twi(long sclClock) {
-  #ifndef DEBUG
+  #ifndef X86_64
   //activates internal pullups for i2c, so you don't have to use external resistors
   PORTC = (1 << PINC5) | (1 << PINC4);
 
@@ -23,7 +21,7 @@ Twi::Twi(long sclClock) {
 
 
 uint8_t Twi::writeTo(const uint8_t address, uint8_t data[], uint8_t size, bool sendStop) {
-  #ifndef DEBUG
+  #ifndef X86_64
   //send start condition bit
   TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT) | ( 1 << TWSTA);
   //wait until start has been send
@@ -68,7 +66,7 @@ uint8_t Twi::writeTo(const uint8_t address, uint8_t data[], uint8_t size, bool s
 
 
 uint8_t Twi::readFrom(const uint8_t address, uint8_t data[], uint8_t size, bool sendStop) {
-  #ifndef DEBUG
+  #ifndef X86_64
   //send start condition bit
   TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT) | ( 1 << TWSTA);
   //wait until start has been send

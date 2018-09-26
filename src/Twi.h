@@ -1,10 +1,10 @@
 #ifndef TWI_H
 #define TWI_H
 
-#ifdef DEBUG
-  #include <cstdint>
-#else
+#ifndef X86_64
   #include <inttypes.h>
+#else
+  #include <cstdint>
 #endif
 
 class Twi {

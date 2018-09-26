@@ -12,6 +12,7 @@
 #ifndef X86_64
   #include <util/setbaud.h>
   #include <inttypes.h>
+  #include <stdlib.h>
 #else
   #include <cinttypes>
 #endif
@@ -26,16 +27,19 @@ public:
   Stream();
 
   //Data is sent as a byte to the serial port
-  void write(int8_t data);
+  void write(char data);
   //Data is sent as a series of bytes to the serial port
-  void write(const int8_t* data, uint8_t size);
+  void write(const char* data);
 
-  //Data is converted into ASCII and then is sent to the serial port
-  void print(char data);
-  void print(const char* data);
-  void print(int data);
-  void print(unsigned int data);
-  void print(float data);
+  //Converts T into a char array and calls write for every char
+  template<typename T>
+  void print(T data) {
+    char buffer[11];
+    #ifndef X86_64
+      itoa(data, buffer, 10);
+    #endif
+    this->write(buffer);
+  }
 
   //calls sufficient print method and adds a carriage return
   template<typename T>
@@ -44,6 +48,34 @@ public:
     this->write('\n');
   }
 };
+
+template<>
+inline void Stream::print<char>(char data) {
+  this->write(data);
+}
+
+template<>
+inline void Stream::print<const char*>(const char* data) {
+  this->write(data);
+}
+
+template<>
+inline void Stream::print<double>(double data) {
+  char buffer[7];
+  #ifndef X86_64
+    dtostrf(data, 6, 2, buffer);
+  #endif
+  this->write(buffer);
+}
+
+template<>
+inline void Stream::print<float>(float data) {
+  char buffer[9];
+  #ifndef X86_64
+    dtostrf(data, 8, 3, buffer);
+  #endif
+  this->write(buffer);
+}
 
 template<typename T>
 Stream& operator<<(Stream& stream, const T data) {

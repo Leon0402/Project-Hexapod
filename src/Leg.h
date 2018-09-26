@@ -4,12 +4,10 @@
 #include "Servo.h"
 #include "Point.h"
 
-#ifdef DEBUG
-  #include <cstdint>
-  #include <iostream>
+#ifndef X86_64
+  #include <inttypes.h>
 #else
- #include <inttypes.h>
- #include "Stream.h"
+  #include <cstdint>
 #endif
 
 #define COXA 2.5
@@ -28,8 +26,9 @@ public:
   @param mountingAngle The angle at which the servo is mounted
   @param position The (default) position of the foot
   */
-  Leg(Servo& coxaServo, Servo& femurServo, Servo& tibiaServo, Pointf position, const float legOffset, const float mountingAngle);
+  Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle);
 
+  void update(uint32_t currentMillis);
   /*!
   @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
   @param destination The destination given in the Hexapod`s coordinate system
@@ -68,7 +67,6 @@ public:
       case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
       case Joint::Femur:  this->femurServo.setAngle(angle); break;
       case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
-      default: avr::cout << "Joint not available" << '\n';
     }
   }
 
@@ -83,7 +81,6 @@ public:
       case Joint::Coxa:   this->coxaServo.move(time);  break;
       case Joint::Femur:  this->femurServo.move(time); break;
       case Joint::Tibia:  this->tibiaServo.move(time); break;
-      default: avr::cout << "Joint not available" << '\n';
     }
   }
 
