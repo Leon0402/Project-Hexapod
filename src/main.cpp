@@ -14,6 +14,8 @@ int main() {
   //enable global interrupts
   sei();
 
+  //test serial esp connection here using load balancing
+
   //configure Timer2 to be used as a timer (systen time is updated every 1ms)
   TCCR2A = (1 << WGM21);
   TCCR2B = (1 << CS22);
