@@ -26,7 +26,7 @@ BINDIR := bin
 cppfiles := $(wildcard $(SRCDIR)/*.cpp)
 objects  := $(subst $(SRCDIR)/, $(OBJDIR)/, $(cppfiles:.cpp=.o))
 
-.Phony: all debug arduino install size clean
+.Phony: all debug arduino upload size clean
 
 default all: arduino
 
@@ -65,3 +65,5 @@ size:
 clean:
 	$(REMOVE) $(OBJDIR)
 	$(REMOVE) $(BINDIR)
+
+run: clean build upload
