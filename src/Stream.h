@@ -31,6 +31,8 @@ public:
   //Data is sent as a series of bytes to the serial port
   void write(const char* data);
 
+  char read();
+
   //Converts T into a char array and calls write for every char
   template<typename T>
   void print(T data) {

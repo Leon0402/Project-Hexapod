@@ -20,6 +20,8 @@ Stream::Stream() {
     #else
       UCSR0A &= ~(1 << U2X0);
     #endif
+
+    //UCSR0B |= (1<<RXEN0);
   #endif
 }
 
@@ -36,4 +38,9 @@ void Stream::write(const char* data) {
     write(*data);
     ++data;
   }
+}
+
+char Stream::read() {
+  while (!(UCSR0A & (1<<RXC0)));
+  return UDR0;
 }

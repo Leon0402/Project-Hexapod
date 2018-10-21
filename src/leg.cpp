@@ -18,7 +18,63 @@ void Leg::update(uint32_t currentMillis) {
   tibiaServo.update(currentMillis);
 }
 
-void Leg::calculateMovementTo(Pointf movementPath[], const Pointf& destination) const {
+uint8_t Leg::getLargestPossibleDistanceToWalk(LinearFunction function, bool inDirectionOfFunction) const {
+  //LinearFunction has exactly two intersections with the motionRange
+  Pointf intersections[2];
+  uint8_t index = 0;
+
+  LinearFunction leftMotionRange {motionRange.range[1], motionRange.range[2]};
+  LinearFunction bottomMotionRange {motionRange.range[1], motionRange.range[3]};
+  LinearFunction rightMotionRange {motionRange.range[3], motionRange.range[4]};
+
+  //Find both insections. Intersection will be saved in the interection array. Index shows how much intersections have been found
+  if(function.getIntersectionWith(leftMotionRange, intersections[index])) {
+    if(motionRange.range[1].x < intersections[index].x && motionRange.range[2].x > intersections[index].x ) {
+      ++index;
+    }
+  }
+  if(function.getIntersectionWith(bottomMotionRange, intersections[index])) {
+    if(motionRange.range[1].x < intersections[index].x && motionRange.range[3].x < intersections[index].x ) {
+      ++index;
+    }
+  }
+  if(index < 2 && function.getIntersectionWith(rightMotionRange, intersections[index])) {
+    if(motionRange.range[3].x < intersections[index].x && motionRange.range[4].x > intersections[index].x ) {
+      ++index;
+    }
+  }
+  if(index < 2) {
+    Pointf circleIntersections[2];
+    function.getIntersectionWith(motionRange.circleCenter, motionRange.radius, circleIntersections);
+
+    for(uint8_t i = 0; i < 2; ++i) {
+      if(motionRange.range[2].x < circleIntersections[i].x && motionRange.range[2].y < circleIntersections[i].y
+        && motionRange.range[4].x > circleIntersections[i].x && motionRange.range[4].y > circleIntersections[i].y ) {
+        intersections[index] = circleIntersections[i];
+      }
+    }
+  }
+
+  //Find the intersection of interest
+  if(inDirectionOfFunction) {
+    if(intersections[0].x > intersections[1].x ) {
+      index = 0;
+    } else {
+      index = 1;
+    }
+  } else {
+    if(intersections[0].x < intersections[1].x ) {
+      index = 0;
+    } else {
+      index = 1;
+    }
+  }
+
+  //return length between current position and intersection
+  return position.distanceTo(intersections[index]);
+}
+
+void Leg::calculateMovementTo(const Pointf& destination, Pointf movementPath[]) const {
 
   // Calculates distance between position.x and destination.x and divides it through the number of steps bewteen these positions + 1
   // -> position.x + distance/(steps +1) gives the x1 coordinate of the next step
@@ -90,8 +146,7 @@ float Leg::calculateFemurAngle(const Pointf& destination, float lengthFemDes) co
 
   if(isLegOnLeftSide()) {
     angleFemur -= 45;
-  }
-  else {
+  } else {
     angleFemur = 225 - angleFemur;
   }
 

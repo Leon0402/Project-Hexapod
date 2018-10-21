@@ -18,7 +18,6 @@ Servo::Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, u
 
 void Servo::update(uint32_t currentMillis) {
   if(this->active) {
-
     int16_t velocityAddition;
 
     if(this->acceleration > 0) {

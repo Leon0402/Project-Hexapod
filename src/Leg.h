@@ -3,6 +3,7 @@
 
 #include "Servo.h"
 #include "Point.h"
+#include "LinearFunction.h"
 
 #ifndef X86_64
   #include <inttypes.h>
@@ -18,7 +19,14 @@
 
 enum class Joint { Coxa, Femur, Tibia };
 
+struct MotionRange {
+  Pointf circleCenter;
+  uint8_t radius;
+  Pointf range[4];
+};
+
 class Leg {
+
 public:
   /*!
   @brief Instanstiates a Leg with it`s three servos and it's mounting angle and mounting point
@@ -29,11 +37,14 @@ public:
   Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle);
 
   void update(uint32_t currentMillis);
+
+  uint8_t getLargestPossibleDistanceToWalk(LinearFunction function, bool inDirectionOfFunction) const;
+
   /*!
   @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
   @param destination The destination given in the Hexapod`s coordinate system
   */
-  void calculateMovementTo(Pointf movementPath[], const Pointf& destination) const;
+  void calculateMovementTo(const Pointf& destination, Pointf movementPath[]) const;
 
   /*!
   @brief Updates the angles of the servos, so the current position can be reached
@@ -101,6 +112,6 @@ private:
 
   const float legOffset;
   const float mountingAngle;
+  const MotionRange motionRange = MotionRange {};
 };
-
 #endif //LEG_H

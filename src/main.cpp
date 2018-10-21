@@ -27,6 +27,17 @@ int main() {
   #endif
 
   hexapod.test();
+/*
+  while(1) {
+    char read = avr::cout.read();
+
+    avr::cout.write(read);
+
+    switch(read) {
+      case 't': hexapod.test(); break;
+      default: avr::cout.write("a");
+    }
+  }*/
 
   while(1);
 }

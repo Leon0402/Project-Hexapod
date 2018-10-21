@@ -24,6 +24,8 @@ public:
   */
   void test();
 
+  void moveLinear(float slope, bool moveUpwards);
+
   /*!
   @brief Moves a leg to a point in the global coordinate system in the given time
   @param legPosition position of the leg (see LegPosition Enum)

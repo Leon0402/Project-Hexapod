@@ -5,6 +5,8 @@ MCU        := atmega328p
 PROGRAMMER := arduino
 PORT       := -P /dev/ttyUSB0
 BAUD       := -b  57600
+#-b 115200
+#-b  57600
 F_CPU      := 16000000
 
 #Compiler
