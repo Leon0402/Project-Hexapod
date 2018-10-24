@@ -19,12 +19,23 @@ public:
   */
   void update(uint32_t currentMillis);
 
-  /*!
-  @brief Some test scripts, moves forwards
+  /*
+  @brief Moves Linear
   */
-  void test();
-
   void moveLinear(float slope, bool moveUpwards);
+
+  /*
+  @brief Body movement: roll
+  */
+  void roll(float angle);
+  /*
+  @brief Body movement: pitch
+  */
+  void pitch(float angle);
+  /*
+  @brief Body movement: yaw
+  */
+  void yaw(float angle);
 
   /*!
   @brief Moves a leg to a point in the global coordinate system in the given time
@@ -33,6 +44,7 @@ public:
   @param time time in milliseconds
   */
   void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
+
   /*!
   @brief Moves a leg to a point in the global coordinate system in the given time following a parabolic function
   @param legPosition position of the leg (see LegPosition Enum)
@@ -41,7 +53,20 @@ public:
   */
   void moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
 
+
+  /*!
+  @brief Some test scripts, moves forwards
+  */
+  void startPosition_test();
+  void moveForward_test();
+  void roll_test();
+  void pitch_test();
+
 private:
+  float rollAngle;
+  float pitchAngle;
+  float yawAngle;
+
   Servocontroller servocontroller1;
   Servocontroller servocontroller2;
   Leg legs[6];

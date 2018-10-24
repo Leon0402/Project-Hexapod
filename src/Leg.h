@@ -21,7 +21,7 @@ enum class Joint { Coxa, Femur, Tibia };
 
 struct MotionRange {
   Pointf circleCenter;
-  uint8_t radius;
+  float radius;
   Pointf range[4];
 };
 
@@ -34,11 +34,11 @@ public:
   @param mountingAngle The angle at which the servo is mounted
   @param position The (default) position of the foot
   */
-  Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle);
+  Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, float legOffset, float mountingAngle);
 
   void update(uint32_t currentMillis);
 
-  uint8_t getLargestPossibleDistanceToWalk(LinearFunction function, bool inDirectionOfFunction) const;
+  uint8_t getLargestPossibleDistance(float slope, bool inDirectionOfFunction) const;
 
   /*!
   @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
@@ -52,8 +52,11 @@ public:
   void updateAngles();
 
   //getter and setter
-  void setPosition(const Pointf& position) { this->position = position; }
-  Pointf getPosition() const { return this->position; }
+  void setPosition(const Pointf& position);
+  const Pointf& getGlobalPosition() const;
+  Pointf getLocalPosition() const;
+
+  float getLegOffset() const;
 
   /*!Servo wrapper functions!*/
 
@@ -112,6 +115,6 @@ private:
 
   const float legOffset;
   const float mountingAngle;
-  const MotionRange motionRange = MotionRange {};
+  const MotionRange motionRange;
 };
 #endif //LEG_H

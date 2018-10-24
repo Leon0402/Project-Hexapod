@@ -6,11 +6,40 @@
   #include <cmath>
 #endif
 
+namespace {
+  static MotionRange calculateMotionRange(float radius = 20.0f, float deadRadius = 10.0f, float angle = 60.0f) {
+    angle /= 2;
+    MotionRange motionRange {Pointf {}, radius,
+                             Pointf {-deadRadius*tan(angle*M_PI/180.0f), deadRadius}, Pointf {0, radius},
+                             Pointf {deadRadius*tan(angle*M_PI/180.0f), deadRadius}, Pointf {0, radius}};
+
+    motionRange.range[1].rotateXY(angle);
+    motionRange.range[3].rotateXY(-angle);
+    return motionRange;
+  }
+
+  static Pointf mapToGlobal(const Pointf& localPoint, float legOffset, float mountingAngle) {
+    Pointf globalPoint = localPoint;
+    globalPoint.y += legOffset;
+    globalPoint.rotateXY(-mountingAngle);
+    return globalPoint;
+  }
+
+  static Pointf mapToLocal(const Pointf& globalPoint, float legOffset, float mountingAngle) {
+    Pointf localPoint = globalPoint;
+    localPoint.rotateXY(mountingAngle);
+    localPoint.y -= legOffset;
+    return localPoint;
+  }
+}
+
 /******************************************************************************************************************************************************/
 //public
 /******************************************************************************************************************************************************/
-Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, const float legOffset, const float mountingAngle)
-: coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo}, position {position}, legOffset {legOffset}, mountingAngle {mountingAngle} {}
+Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, float legOffset, float mountingAngle)
+: coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo},
+  position {position}, legOffset {legOffset}, mountingAngle {mountingAngle},
+  motionRange {calculateMotionRange()} {}
 
 void Leg::update(uint32_t currentMillis) {
   coxaServo.update(currentMillis);
@@ -18,28 +47,41 @@ void Leg::update(uint32_t currentMillis) {
   tibiaServo.update(currentMillis);
 }
 
-uint8_t Leg::getLargestPossibleDistanceToWalk(LinearFunction function, bool inDirectionOfFunction) const {
+/*
+* Possible Problems
+* - More than two intersections ()
+*
+*/
+uint8_t Leg::getLargestPossibleDistance(float slope, bool inDirectionOfFunction) const {
+  //Create function in local coordinate system
+  LinearFunction temp {slope, 0};
+  temp.rotateXY(this->mountingAngle);
+  LinearFunction function {temp.slope, mapToLocal(this->position, this->legOffset, this->mountingAngle)};
+
   //LinearFunction has exactly two intersections with the motionRange
   Pointf intersections[2];
   uint8_t index = 0;
 
-  LinearFunction leftMotionRange {motionRange.range[1], motionRange.range[2]};
-  LinearFunction bottomMotionRange {motionRange.range[1], motionRange.range[3]};
-  LinearFunction rightMotionRange {motionRange.range[3], motionRange.range[4]};
+  LinearFunction leftMotionRange {motionRange.range[0], motionRange.range[1]};
+  LinearFunction bottomMotionRange {motionRange.range[0], motionRange.range[2]};
+  LinearFunction rightMotionRange {motionRange.range[2], motionRange.range[3]};
 
   //Find both insections. Intersection will be saved in the interection array. Index shows how much intersections have been found
   if(function.getIntersectionWith(leftMotionRange, intersections[index])) {
-    if(motionRange.range[1].x < intersections[index].x && motionRange.range[2].x > intersections[index].x ) {
+    avr::cout << "leftMotionRange " << intersections[index] << '\n';
+    if(intersections[index].x >= motionRange.range[0].x && intersections[index].x <= motionRange.range[1].x) {
       ++index;
     }
   }
   if(function.getIntersectionWith(bottomMotionRange, intersections[index])) {
-    if(motionRange.range[1].x < intersections[index].x && motionRange.range[3].x < intersections[index].x ) {
+    avr::cout << "bottomMotionRange " << intersections[index] << '\n';
+    if(intersections[index].x > motionRange.range[0].x && intersections[index].x  < motionRange.range[2].x) {
       ++index;
     }
   }
   if(index < 2 && function.getIntersectionWith(rightMotionRange, intersections[index])) {
-    if(motionRange.range[3].x < intersections[index].x && motionRange.range[4].x > intersections[index].x ) {
+    avr::cout << "rightMotionRange " << intersections[index] << '\n';
+    if(intersections[index].x >= motionRange.range[2].x && intersections[index].x <= motionRange.range[3].x) {
       ++index;
     }
   }
@@ -47,13 +89,19 @@ uint8_t Leg::getLargestPossibleDistanceToWalk(LinearFunction function, bool inDi
     Pointf circleIntersections[2];
     function.getIntersectionWith(motionRange.circleCenter, motionRange.radius, circleIntersections);
 
+    avr::cout << "circle1 " << circleIntersections[0] << '\n';
+    avr::cout << "circle2 " << circleIntersections[1] << '\n';
+
+
     for(uint8_t i = 0; i < 2; ++i) {
-      if(motionRange.range[2].x < circleIntersections[i].x && motionRange.range[2].y < circleIntersections[i].y
-        && motionRange.range[4].x > circleIntersections[i].x && motionRange.range[4].y > circleIntersections[i].y ) {
+      if(circleIntersections[i].x > motionRange.range[1].x && circleIntersections[i].y > motionRange.range[1].y
+        && circleIntersections[i].x < motionRange.range[3].x) {
         intersections[index] = circleIntersections[i];
       }
     }
   }
+  avr::cout << intersections[0] << '\n';
+  avr::cout << intersections[1] << '\n';
 
   //Find the intersection of interest
   if(inDirectionOfFunction) {
@@ -69,9 +117,7 @@ uint8_t Leg::getLargestPossibleDistanceToWalk(LinearFunction function, bool inDi
       index = 1;
     }
   }
-
-  //return length between current position and intersection
-  return position.distanceTo(intersections[index]);
+  return abs(position.x-intersections[index].x);
 }
 
 void Leg::calculateMovementTo(const Pointf& destination, Pointf movementPath[]) const {
@@ -101,9 +147,7 @@ void Leg::calculateMovementTo(const Pointf& destination, Pointf movementPath[]) 
 
 
 void Leg::updateAngles() {
-  Pointf destination {this->position};
-  destination.rotateXY(this->mountingAngle);
-  destination.y -= this->legOffset;
+  Pointf destination = mapToLocal(this->position, this->legOffset, this->mountingAngle);
 
   float lengthLeg = sqrt((destination.x*destination.x) + (destination.y*destination.y));
   float lengthFemDes = sqrt((HEIGHT - destination.z) * (HEIGHT - destination.z) + (lengthLeg - COXA) * (lengthLeg - COXA));
@@ -113,6 +157,22 @@ void Leg::updateAngles() {
   float angleTibia = calculateTibiaAngle(destination, lengthFemDes);
 
   setAllAngles(angleCoxa, angleFemur, angleTibia);
+}
+
+void Leg::setPosition(const Pointf& position) {
+  this->position = position;
+}
+
+const Pointf& Leg::getGlobalPosition() const {
+  return this->position;
+}
+
+Pointf Leg::getLocalPosition() const {
+  return mapToLocal(this->position, this->legOffset, this->mountingAngle);
+}
+
+float Leg::getLegOffset() const {
+  return this->legOffset;
 }
 
 /******************************************************************************************************************************************************/

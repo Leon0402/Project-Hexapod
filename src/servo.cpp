@@ -8,12 +8,11 @@
   #include <cstdint>
   #include <stdlib.h>
 #endif
-
 /******************************************************************************************************************************************************/
 // public
 /******************************************************************************************************************************************************/
 Servo::Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, uint16_t servoMax)
-: servocontroller {servocontroller}, pulseWidth{(servoMin+servoMax)/2}, destinationPulseWidth{pulseWidth},
+: servocontroller {servocontroller}, pulseWidth{0}, destinationPulseWidth{0},
   pin {pin}, servoMin {servoMin}, servoMax {servoMax}, pulseWidthRange {mapToPulseWidth(Servo::angleRange)} {}
 
 void Servo::update(uint32_t currentMillis) {
@@ -99,6 +98,7 @@ void Servo::move(float speed, float targetSpeed, float acceleration) {
     this->acceleration = -acceleration;
   }
   this->active = true;
+
 }
 
 void Servo::move(uint16_t time) {

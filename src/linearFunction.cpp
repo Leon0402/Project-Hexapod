@@ -6,15 +6,21 @@
   #include <cmath>
 #endif
 
+LinearFunction::LinearFunction(float slope, float yIntercept)
+: slope {slope}, yIntercept {yIntercept} {}
+
+LinearFunction::LinearFunction(float slope, Pointf point1)
+: slope {slope}, yIntercept {point1.y - slope*point1.x} {}
+
 LinearFunction::LinearFunction(Pointf point1, Pointf point2)
-: slope {(point1.x - point2.x)/(point1.y - point2.y)},
-  yIntercept {point1.y - slope*point2.x} {}
+: slope {(point1.y - point2.y)/(point1.x - point2.x)},
+  yIntercept {point1.y - slope*point1.x} {}
 
 bool LinearFunction::getIntersectionWith(const LinearFunction& function, Pointf& intersection) const {
   if(this->slope == function.slope) {
     return false;
   }
-  intersection.x = (yIntercept - function.yIntercept)/(slope - function.slope);
+  intersection.x = (yIntercept - function.yIntercept)/(function.slope - slope);
   intersection.y = slope*intersection.x + yIntercept;
   return true;
 }
@@ -27,9 +33,11 @@ void LinearFunction::getIntersectionWith(const Pointf& circleCenter, uint8_t rad
                - circleCenter.y*circleCenter.y - yIntercept*yIntercept + 2*circleCenter.y*yIntercept
                + radius*radius - circleCenter.x*circleCenter.x*slope*slope + radius*radius*slope*slope;
   //(Mx2*m - m*n + Mx1 + sqrt(2*Mx2*m*Mx1 - 2*Mx1*m*y - Mx2² - y² +  2*Mx2*y + r² - Mx1²m² + r²m²))/(1 + m²)
-  intersections[0] = (beforeRoot + sqrt(root))/(1+slope*slope);
+  intersections[0].x = (beforeRoot + sqrt(root))/(1+slope*slope);
+  intersections[0].y = slope*intersections[0].x + yIntercept;
   //(Mx2*m - m*n + Mx1 - sqrt(2*Mx2*m*Mx1 - 2*Mx1*m*y - Mx2² - y² +  2*Mx2*y + r² - Mx1²m² + r²m²))/(1 + m²)
-  intersections[1] = (beforeRoot - sqrt(root))/(1+slope*slope);
+  intersections[1].x = (beforeRoot - sqrt(root))/(1+slope*slope);
+  intersections[1].y = slope*intersections[1].x + yIntercept;
 }
 
 void LinearFunction::rotateXY(float angle) {
@@ -39,6 +47,11 @@ void LinearFunction::rotateXY(float angle) {
   Pointf point2 {-1, this->slope*-1 + this->yIntercept };
   point2.rotateXY(angle);
 
-  this->slope = (point1.x - point2.x)/(point1.y - point2.y);
-  this->yIntercept = point1.y - slope*point2.x;
+  if(point1.x == point2.x) {
+    this->slope = 255;
+  } else {
+    this->slope = (point1.y - point2.y)/(point1.x - point2.x);
+  }
+
+  this->yIntercept = point1.y - slope*point1.x;
 }

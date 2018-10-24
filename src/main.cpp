@@ -2,6 +2,7 @@
 
 #ifndef X86_64
   #include <avr/interrupt.h>
+  #include <util/delay.h>
   #include <time.h>
 #endif
 
@@ -13,8 +14,6 @@ int main() {
   #ifndef X86_64
   //enable global interrupts
   sei();
-
-  //test serial esp connection here using load balancing
 
   //configure Timer2 to be used as a timer (systen time is updated every 1ms)
   TCCR2A = (1 << WGM21);
@@ -28,7 +27,11 @@ int main() {
   TIMSK1 |= (1 << OCIE1A);
   #endif
 
-  hexapod.test();
+  //hexapod.moveLinear(0, true);
+  hexapod.startPosition_test();
+  _delay_ms(2000);
+  //hexapod.pitch(20.0f);
+  //hexapod.yaw(20.0f);
 /*
   while(1) {
     char read = avr::cout.read();
