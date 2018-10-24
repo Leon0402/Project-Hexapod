@@ -11,12 +11,6 @@
   #include <cstdint>
 #endif
 
-#define COXA 2.5
-#define FEMUR 8.5
-#define TIBIA 11.5
-#define HEIGHT 7 //from femur mounting point
-#define STEPS 50 //max 254
-
 enum class Joint { Coxa, Femur, Tibia };
 
 struct MotionRange {
@@ -44,7 +38,7 @@ public:
   @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
   @param destination The destination given in the Hexapod`s coordinate system
   */
-  void calculateMovementTo(const Pointf& destination, Pointf movementPath[]) const;
+  void calculateMovementTo(const Pointf& destination, Pointf movementPath[], uint8_t size) const;
 
   /*!
   @brief Updates the angles of the servos, so the current position can be reached
@@ -62,50 +56,45 @@ public:
 
   /*!
   @brief Sets the angles of all Servos
-  @param angleCoxa angle of the coxa Servo between 0 and  180 degrees
+  @param angleCoxa  angle of the coxa  Servo between 0 and  180 degrees
   @param angleFemur angle of the femur Servo between 0 and  180 degrees
   @param angleTibia angle of the tibia Servo between 0 and  180 degrees
   */
-  void setAllAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
-    setAngle(Joint::Coxa, angleCoxa);
-    setAngle(Joint::Femur, angleFemur);
-    setAngle(Joint::Tibia, angleTibia);
-  }
+  void setAllAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia);
 
   /*!
   @brief see discription of "void setAngle(uint8_t angle)" in Servo.h
   @param joint Determines the servo the setAngle() function should be called on
   */
-  void setAngle(Joint joint, uint8_t angle) {
-    switch(joint) {
-      case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
-      case Joint::Femur:  this->femurServo.setAngle(angle); break;
-      case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
-    }
-  }
+  void setAngle(Joint joint, uint8_t angle);
 
-  void moveAll(uint16_t time = 0) {
-    move(Joint::Coxa, time);
-    move(Joint::Femur, time);
-    move(Joint::Tibia, time);
-  }
+  /*!
+  @brief Moves all Servos (enables them for the Servos update method)
+  @param time Time the servo should need for the movement
+  */
+  void moveAll(uint16_t time = 0);
 
-  void move(Joint joint, uint16_t time = 0) {
-    switch(joint) {
-      case Joint::Coxa:   this->coxaServo.move(time);  break;
-      case Joint::Femur:  this->femurServo.move(time); break;
-      case Joint::Tibia:  this->tibiaServo.move(time); break;
-    }
-  }
+  /*!
+  @brief see discription of "void move(uint16_t time)" in Servo.h
+  @param joint Determines the servo the setAngle() function should be called on
+  */
+  void move(Joint joint, uint16_t time = 0);
 
 private:
-  void calculateParabolicMovement(Pointf nextMovementArray[], float nextStep, float slope, float yIntercept, float a, float b, float c) const;
+  void calculateParabolicMovement(Pointf nextMovementArray[], uint8_t size, float nextStep, float slope, float yIntercept, float a, float b, float c) const;
 
   float calculateCoxaAngle(const Pointf& destination) const;
   float calculateFemurAngle(const Pointf& destination, float lengthFemDes) const;
-  float calculateTibiaAngle(const Pointf& destination, float lengthFemDes) const;
+  float calculateTibiaAngle(float lengthFemDes) const;
 
   bool isLegOnLeftSide() const;
+
+
+  constexpr static float coxaLength = 2.5f;
+  constexpr static float femurLength = 8.5f;
+  constexpr static float tibiaLength = 11.5f;
+  //from femur mounting point
+  constexpr static uint8_t height = 7;
 
   Servo coxaServo;
   Servo femurServo;

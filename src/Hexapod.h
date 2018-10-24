@@ -19,19 +19,21 @@ public:
   */
   void update(uint32_t currentMillis);
 
-  /*
+  /*!
   @brief Moves Linear
   */
   void moveLinear(float slope, bool moveUpwards);
 
-  /*
+  /*!
   @brief Body movement: roll
   */
   void roll(float angle);
-  /*
+
+  /*!
   @brief Body movement: pitch
   */
   void pitch(float angle);
+
   /*
   @brief Body movement: yaw
   */

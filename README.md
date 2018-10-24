@@ -27,7 +27,6 @@ Provides an API for programming a hexapod.
 - [ ] LinearMovement can be calcuated
 - [ ] Finish Gait API
 - [ ] Add some test scripts for translation and rotation of the hexapod
-- [ ] make "#defines" in Leg.h static const members instead?
 - [ ] Add enhancements for controlling the Hexapod (Web, joystick ...)
 
 ### Dependencies

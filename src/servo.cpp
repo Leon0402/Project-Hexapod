@@ -2,18 +2,16 @@
 
  #ifndef X86_64
   #include <time.h>
-  #include <stdint.h>
-  #include <stdlib.h>
+  #include <math.h>
 #else
-  #include <cstdint>
-  #include <stdlib.h>
+  #include <cmath>
 #endif
+
 /******************************************************************************************************************************************************/
 // public
 /******************************************************************************************************************************************************/
 Servo::Servo(Servocontroller& servocontroller, uint8_t pin, uint16_t servoMin, uint16_t servoMax)
-: servocontroller {servocontroller}, pulseWidth{0}, destinationPulseWidth{0},
-  pin {pin}, servoMin {servoMin}, servoMax {servoMax}, pulseWidthRange {mapToPulseWidth(Servo::angleRange)} {}
+: servocontroller {servocontroller}, pin {pin}, servoMin {servoMin}, servoMax {servoMax} {}
 
 void Servo::update(uint32_t currentMillis) {
   if(this->active) {
@@ -102,11 +100,12 @@ void Servo::move(float speed, float targetSpeed, float acceleration) {
 }
 
 void Servo::move(uint16_t time) {
-  float difference = abs((int16_t)this->destinationPulseWidth - (int16_t)this->pulseWidth);
+  float difference = fabs((float)this->destinationPulseWidth - (float)this->pulseWidth);
+  uint16_t pulseWidthRange = mapToPulseWidth(Servo::angleRange);
   if(time != 0) {
-    move(difference/time, this->pulseWidthRange, 0.0f);
+    move(difference/time, pulseWidthRange, 0.0f);
   } else {
-    move(this->pulseWidthRange, this->pulseWidthRange, 0.0f);
+    move(pulseWidthRange, pulseWidthRange, 0.0f);
   }
 }
 

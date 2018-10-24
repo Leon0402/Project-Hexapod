@@ -137,10 +137,10 @@ void Hexapod::moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& dest
 }
 
 void Hexapod::moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time) {
-  Pointf movementPath[STEPS+1];
-  this->legs[static_cast<int>(legPosition)].calculateMovementTo(destination, movementPath);
+  Pointf movementPath[50];
+  this->legs[static_cast<int>(legPosition)].calculateMovementTo(destination, movementPath, 50);
 
-  for(uint8_t i = 0; i < STEPS+1; i++) {
+  for(uint8_t i = 0; i < 50; i++) {
     moveLegDirectlyToPoint(legPosition, movementPath[i]);
     _delay_ms(10);
   }
