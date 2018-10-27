@@ -11,6 +11,7 @@ namespace {
 }
 
 int main() {
+
   #ifndef X86_64
   //enable global interrupts
   sei();
@@ -28,10 +29,10 @@ int main() {
   #endif
 
   //hexapod.moveLinear(0, true);
-  hexapod.startPosition_test();
-  _delay_ms(2000);
+  hexapod.calibration_test();
   //hexapod.pitch(20.0f);
   //hexapod.yaw(20.0f);
+  
 /*
   while(1) {
     char read = avr::cout.read();
@@ -52,6 +53,7 @@ int main() {
 ISR(TIMER2_COMPA_vect){
   system_tick();
 }
+
 //update servos
 ISR(TIMER1_COMPA_vect){
   hexapod.update(time(nullptr));

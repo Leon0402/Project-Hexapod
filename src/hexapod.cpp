@@ -174,15 +174,26 @@ void Hexapod::moveForward_test() {
 }
 
 void Hexapod::startPosition_test() {
-  moveLegDirectlyToPoint(LegPosition::FrontLeft,   Pointf { 20.75f,  11.0f, 0.0f});
-  moveLegDirectlyToPoint(LegPosition::MiddleLeft,  Pointf {  0.00f,  21.5f, 0.0f});
+  moveLegDirectlyToPoint(LegPosition::FrontLeft,   Pointf { 20.75f,  11.0f, -10.0f});
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(LegPosition::MiddleLeft,  Pointf {  0.00f,  21.5f, -10.0f});
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(LegPosition::RearLeft,    Pointf {-20.75f,  11.0f, -10.0f});
   _delay_ms(500);
-  moveLegDirectlyToPoint(LegPosition::RearLeft,    Pointf {-20.75f,  11.0f, 0.0f});
-  moveLegDirectlyToPoint(LegPosition::FrontRight,  Pointf { 20.75f, -11.0f, 0.0f});
+  moveLegDirectlyToPoint(LegPosition::FrontRight,  Pointf { 20.75f, -11.0f, -10.0f});
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(LegPosition::MiddleRight, Pointf {  0.00f, -21.5f, -10.0f});
+  _delay_ms(1000);
+  moveLegDirectlyToPoint(LegPosition::RearRight,   Pointf {-20.75f, -11.0f, -10.0f});
   _delay_ms(500);
-  moveLegDirectlyToPoint(LegPosition::MiddleRight, Pointf {  0.00f, -21.5f, 0.0f});
-  moveLegDirectlyToPoint(LegPosition::RearRight,   Pointf {-20.75f, -11.0f, 0.0f});
-  _delay_ms(500);
+}
+
+void Hexapod::calibration_test() {
+  for(uint8_t i = 0; i < 6; ++i) {
+    this->legs[i].setAllAngles(90, 180, 90);
+    this->legs[i].moveAll();
+    _delay_ms(1000);
+  }
 }
 
 void Hexapod::roll_test() {

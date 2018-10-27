@@ -47,8 +47,8 @@ public:
 
   //getter and setter
   void setPosition(const Pointf& position);
-  const Pointf& getGlobalPosition() const;
-  Pointf getLocalPosition() const;
+  Pointf getGlobalPosition() const;
+  const Pointf& getLocalPosition() const;
 
   float getLegOffset() const;
 
@@ -83,23 +83,27 @@ public:
 private:
   void calculateParabolicMovement(Pointf nextMovementArray[], uint8_t size, float nextStep, float slope, float yIntercept, float a, float b, float c) const;
 
-  float calculateCoxaAngle(const Pointf& destination) const;
-  float calculateFemurAngle(const Pointf& destination, float lengthFemDes) const;
+  float calculateCoxaAngle() const;
+  float calculateFemurAngle(float lengthFemDes) const;
   float calculateTibiaAngle(float lengthFemDes) const;
 
   bool isLegOnLeftSide() const;
 
-
+  /*! These values probably have to be customized for your hexapod */
   constexpr static float coxaLength = 2.5f;
   constexpr static float femurLength = 8.5f;
-  constexpr static float tibiaLength = 11.5f;
-  //from femur mounting point
-  constexpr static uint8_t height = 7;
+  constexpr static float tibiaLength = 12.0f;
+  //Differnce between femurMountingHeight (calculations are done from here) and the orginin
+  constexpr static float zOffset = 5.0f;
+  //The servo has 45° at 0°
+  constexpr static float femurAngleOffset = 45.0f;
+  /****************************************************************/
 
   Servo coxaServo;
   Servo femurServo;
   Servo tibiaServo;
 
+  //local position
   Pointf position;
 
   const float legOffset;

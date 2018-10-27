@@ -60,6 +60,7 @@ public:
   @brief Some test scripts, moves forwards
   */
   void startPosition_test();
+  void calibration_test();
   void moveForward_test();
   void roll_test();
   void pitch_test();

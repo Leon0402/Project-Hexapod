@@ -147,28 +147,29 @@ void Leg::calculateMovementTo(const Pointf& destination, Pointf movementPath[], 
 
 
 void Leg::updateAngles() {
-  Pointf destination = mapToLocal(this->position, this->legOffset, this->mountingAngle);
+  //Some calculations needed for the calculation of femur and tibia
+  float legLength = sqrt(this->position.x*this->position.x + this->position.y*this->position.y);
+  float lengthFemDes = sqrt((this->position.z + zOffset)*(this->position.z + zOffset) + (legLength - Leg::coxaLength)*(legLength - Leg::coxaLength));
 
-  float legLength = sqrt((destination.x*destination.x) + (destination.y*destination.y));
-  float lengthFemDes = sqrt((Leg::height - destination.z) * (Leg::height - destination.z) + (legLength - Leg::coxaLength) * (legLength - Leg::coxaLength));
-
-  float angleCoxa = calculateCoxaAngle(destination);
-  float angleFemur = calculateFemurAngle(destination, lengthFemDes);
+  //calculate coxa,femur and tibia angle with trigometry
+  float angleCoxa = calculateCoxaAngle();
+  float angleFemur = calculateFemurAngle(lengthFemDes);
   float angleTibia = calculateTibiaAngle(lengthFemDes);
 
+  //angles in Servo object will be updated
   setAllAngles(angleCoxa, angleFemur, angleTibia);
 }
 
 void Leg::setPosition(const Pointf& position) {
-  this->position = position;
+  this->position = mapToLocal(position, this->legOffset, this->mountingAngle);
 }
 
-const Pointf& Leg::getGlobalPosition() const {
+Pointf Leg::getGlobalPosition() const {
+  return mapToGlobal(this->position, this->legOffset, this->mountingAngle);
+}
+
+const Pointf& Leg::getLocalPosition() const {
   return this->position;
-}
-
-Pointf Leg::getLocalPosition() const {
-  return mapToLocal(this->position, this->legOffset, this->mountingAngle);
 }
 
 float Leg::getLegOffset() const {
@@ -182,10 +183,18 @@ void Leg::setAllAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia
 }
 
 void Leg::setAngle(Joint joint, uint8_t angle) {
-  switch(joint) {
-    case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
-    case Joint::Femur:  this->femurServo.setAngle(angle); break;
-    case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
+  if(isLegOnLeftSide()) {
+    switch(joint) {
+      case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
+      case Joint::Femur:  this->femurServo.setAngle(angle - femurAngleOffset); break;
+      case Joint::Tibia:  this->tibiaServo.setAngle(180.0f - angle); break;
+    }
+  } else {
+    switch(joint) {
+      case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
+      case Joint::Femur:  this->femurServo.setAngle(180.0f + femurAngleOffset - angle); break;
+      case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
+    }
   }
 }
 
@@ -221,37 +230,24 @@ void Leg::calculateParabolicMovement(Pointf movementPath[], uint8_t size, float 
   }
 }
 
-float Leg::calculateCoxaAngle(const Pointf& destination) const {
-  return atan(destination.x/destination.y)*180.0f/M_PI + Servo::angleRange/2.0f;
+float Leg::calculateCoxaAngle() const {
+  //a = tan⁻¹(x/y)
+  return atan(this->position.x/this->position.y)*180.0f/M_PI + Servo::angleRange/2.0f;
 }
 
-float Leg::calculateFemurAngle(const Pointf& destination, float lengthFemDes) const {
-  //a1 = cos⁻¹((Höhe - z0)/ lengthFemDes)
-  float angleFemur1 = acos((Leg::height - destination.z) / lengthFemDes)*180.0f/M_PI;
-  //a2 = cos⁻¹((FEMUR² + lengthFemDes² - Tibia²) / (2 * Femur * lengthFemdes))
+float Leg::calculateFemurAngle(float lengthFemDes) const {
+  //a1 = cos⁻¹(-z0 / lengthFemDes)
+  float angleFemur1 = acos((-this->position.z - zOffset)/lengthFemDes)*180.0f/M_PI;
+  //a2 = cos⁻¹((FEMUR² + lengthFemDes² - Tibia²) / (2 * Femur * lengthFemDes))
   float angleFemur2 = acos((Leg::femurLength*Leg::femurLength + lengthFemDes*lengthFemDes - Leg::tibiaLength*Leg::tibiaLength) / (2.0f*Leg::femurLength*lengthFemDes))*180.0f/M_PI;
-  float angleFemur = angleFemur1 + angleFemur2;
-
-  if(isLegOnLeftSide()) {
-    angleFemur -= 45.0f;
-  } else {
-    angleFemur = 225.0f - angleFemur;
-  }
-
-  return angleFemur;
+  return angleFemur1 + angleFemur2;
 }
 
 float Leg::calculateTibiaAngle(float lengthFemDes) const {
-  float angleTibia = acos((Leg::femurLength*Leg::femurLength + Leg::tibiaLength*Leg::tibiaLength - lengthFemDes*lengthFemDes)
-                          / (2.0f*Leg::femurLength + Leg::tibiaLength))*180.0f/M_PI;
-
-  if(isLegOnLeftSide()) {
-    angleTibia = 180.0f - angleTibia;
-  }
-
-  return angleTibia;
+  //b = cos⁻¹((FEMUR² + TIBIA² - lengthFemDes²) / (2 * FEMUR * TIBIA)
+  return acos((Leg::femurLength*Leg::femurLength + Leg::tibiaLength*Leg::tibiaLength - lengthFemDes*lengthFemDes)/(2.0f*Leg::femurLength*Leg::tibiaLength))*180.0f/M_PI;
 }
 
 bool Leg::isLegOnLeftSide() const {
-  return (this->mountingAngle == 0 || this->mountingAngle == 62 || this->mountingAngle == 298);
+  return this->mountingAngle == 0 || this->mountingAngle == 62 || this->mountingAngle == 298;
 }
