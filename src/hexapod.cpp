@@ -37,24 +37,58 @@ void Hexapod::update(uint32_t currentMillis) {
 }
 
 void Hexapod::moveLinear(float slope, bool moveUpwards) {
-  avr::cout << this->legs[0].getLargestPossibleDistance(slope, moveUpwards) << '\n';
-  /*
-  for(uint8_t cycle : waveGait.pattern) {
-    for(uint8_t i = 0; i < 6; ++i) {
-      if((cycle >> i) & 0x01) {
-        avr::cout << this->legs[i].getLargestPossibleDistance(slope, moveUpwards) << '\n';
-        avr::cout << '\n';
-      } else {
-        //avr::cout << this->legs[i].getLargestPossibleDistance(function, !moveUpwards) << '\n';
-      }
+  //for(uint8_t cycle : waveGait.pattern) {
+    for(uint8_t i = 1; i < 2; ++i) {
+      Pointf nextPosition;
+
+      //if((cycle >> i) & 0x01) {
+        nextPosition = this->legs[i].getNextLinearPoint(slope, waveGait.swingPhaseCycles, moveUpwards);
+      //} else {
+        //nextPosition = this->legs[i].getNextLinearPoint(slope, waveGait.stancePhaseCycles, !moveUpwards);
+      //}
+
+      //avr::cout << nextPosition << '\n';
+
+      this->legs[i].setLocalPosition(nextPosition);
+      this->legs[i].updateAngles();
+      this->legs[i].moveAll();
       _delay_ms(200);
     }
-    //avr::cout << '\n';
-  }*/
+  //}
+}
+
+void Hexapod::bodyIk(float yawAngle, float pitchAngle, float rollAngle) {
+  if(yawAngle > 45.0f || yawAngle < -45.0f || pitchAngle > 45.0f || pitchAngle < -45.0f || rollAngle > 45.0f || rollAngle < -45.0f) {
+    return;
+  }
+
+  float yawAngleAddition;
+  this->yawAngle < yawAngle ? yawAngleAddition = 0.1f : yawAngleAddition = -0.1f;
+  float pitchAngleAddition;
+  this->pitchAngle < pitchAngle ? pitchAngleAddition = 0.1f : pitchAngleAddition = -0.1f;
+  float rollAngleAddition;
+  this->rollAngle < rollAngle ? rollAngleAddition = 0.1f : rollAngleAddition = -0.1f;
+
+  Pointf globalPositions[6];
+  for(uint8_t i = 0; i < 6; ++i) {
+    globalPositions[i] = this->legs[i].getGlobalPosition();
+  }
+
+  do {
+    this->yawAngle += yawAngleAddition;
+    this->pitchAngle += pitchAngleAddition;
+    this->rollAngle += rollAngleAddition;
+
+    for(uint8_t i = 0; i < 6; ++i) {
+      Pointf globalPosition = globalPositions[i];
+      globalPosition.rotateXYZ(this->yawAngle, this->pitchAngle, this->rollAngle);
+      moveLegDirectlyToPoint(static_cast<LegPosition>(i), globalPosition);
+    }
+  } while(fabs(this->yawAngle - yawAngle) > 0.15f || fabs(this->pitchAngle - pitchAngle) > 0.15f || fabs(this->pitchAngle - pitchAngle) > 0.15f);
 }
 
 void Hexapod::roll(float angle) {
-  if(angle > 45.0f || angle < -45.0f) {
+  if(angle == this->rollAngle || angle > 45.0f || angle < -45.0f) {
     return;
   }
 
@@ -71,15 +105,10 @@ void Hexapod::roll(float angle) {
 
     for(uint8_t i = 0; i < 6; ++i) {
       Pointf globalPosition = globalPositions[i];
-      //globalPosition.z += tan(this->rollAngle*M_PI/180.0f)*(this->legs[i].getGlobalPosition().y - this->legs[i].getLegOffset());
-      if(this->legs[i].getGlobalPosition().y > 0) {
-        globalPosition.z += tan(this->rollAngle*M_PI/180.0f)*this->legs[i].getLegOffset();
-      } else {
-        globalPosition.z += tan(-this->rollAngle*M_PI/180.0f)*this->legs[i].getLegOffset();
-      }
+      globalPosition.rotateX(this->rollAngle);
       moveLegDirectlyToPoint(static_cast<LegPosition>(i), globalPosition);
     }
-  } while(fabs(this->rollAngle - angle) > 0.01f);
+  } while(fabs(this->rollAngle - angle) > 0.1f);
 }
 
 void Hexapod::pitch(float angle) {
@@ -100,7 +129,7 @@ void Hexapod::pitch(float angle) {
 
     for(uint8_t i = 0; i < 6; ++i) {
       Pointf globalPosition = globalPositions[i];
-      globalPosition.z += tan(this->pitchAngle*M_PI/180.0f)*this->legs[i].getGlobalPosition().x;
+      globalPosition.rotateY(this->rollAngle);
       moveLegDirectlyToPoint(static_cast<LegPosition>(i), globalPosition);
     }
   } while(fabs(this->pitchAngle - angle) > 0.01);
@@ -124,14 +153,14 @@ void Hexapod::yaw(float angle) {
 
     for(uint8_t i = 0; i < 6; ++i) {
       Pointf globalPosition = globalPositions[i];
-      globalPosition.rotateXY(this->yawAngle);
+      globalPosition.rotateZ(this->yawAngle);
       moveLegDirectlyToPoint(static_cast<LegPosition>(i), globalPosition);
     }
   } while(fabs(this->yawAngle - angle) > 0.01);
 }
 
 void Hexapod::moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time) {
-  this->legs[static_cast<int>(legPosition)].setPosition(destination);
+  this->legs[static_cast<int>(legPosition)].setGlobalPosition(destination);
   this->legs[static_cast<int>(legPosition)].updateAngles();
   this->legs[static_cast<int>(legPosition)].moveAll(time);
 }
@@ -174,18 +203,12 @@ void Hexapod::moveForward_test() {
 }
 
 void Hexapod::startPosition_test() {
-  moveLegDirectlyToPoint(LegPosition::FrontLeft,   Pointf { 20.75f,  11.0f, -10.0f});
-  _delay_ms(1000);
-  moveLegDirectlyToPoint(LegPosition::MiddleLeft,  Pointf {  0.00f,  21.5f, -10.0f});
-  _delay_ms(1000);
-  moveLegDirectlyToPoint(LegPosition::RearLeft,    Pointf {-20.75f,  11.0f, -10.0f});
-  _delay_ms(500);
-  moveLegDirectlyToPoint(LegPosition::FrontRight,  Pointf { 20.75f, -11.0f, -10.0f});
-  _delay_ms(1000);
-  moveLegDirectlyToPoint(LegPosition::MiddleRight, Pointf {  0.00f, -21.5f, -10.0f});
-  _delay_ms(1000);
-  moveLegDirectlyToPoint(LegPosition::RearRight,   Pointf {-20.75f, -11.0f, -10.0f});
-  _delay_ms(500);
+  for(uint8_t i = 0; i < 6; ++i) {
+    this->legs[i].setLocalPosition(Pointf {0.0f, 7.5f, -10.0f});
+    this->legs[i].updateAngles();
+    this->legs[i].moveAll();
+    _delay_ms(1000);
+  }
 }
 
 void Hexapod::calibration_test() {

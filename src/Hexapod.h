@@ -25,6 +25,11 @@ public:
   void moveLinear(float slope, bool moveUpwards);
 
   /*!
+  @brief Complete body rotation
+  */
+  void bodyIk(float yawAngle, float pitchAngle, float rollAngle);
+
+  /*!
   @brief Body movement: roll
   */
   void roll(float angle);

@@ -14,7 +14,10 @@ class Pointf {
 public:
 	Pointf(float x = 0.0f, float y = 0.0f, float z = 0.0f);
 
-	void rotateXY(float angle);
+	void rotateX(float angle);
+  void rotateY(float angle);
+  void rotateZ(float angle);
+  void rotateXYZ(float yawAngle, float pitchAngle, float rollAngle);
   uint8_t distanceTo(const Pointf& point) const;
 
 	float x;

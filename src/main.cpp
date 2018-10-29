@@ -28,11 +28,10 @@ int main() {
   TIMSK1 |= (1 << OCIE1A);
   #endif
 
-  //hexapod.moveLinear(0, true);
-  hexapod.calibration_test();
-  //hexapod.pitch(20.0f);
-  //hexapod.yaw(20.0f);
-  
+  hexapod.startPosition_test();
+  //hexapod.roll(20);
+  hexapod.moveLinear(0, true);
+
 /*
   while(1) {
     char read = avr::cout.read();

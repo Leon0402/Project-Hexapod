@@ -7,27 +7,27 @@
 #endif
 
 namespace {
-  static MotionRange calculateMotionRange(float radius = 20.0f, float deadRadius = 10.0f, float angle = 60.0f) {
+  static MotionRange calculateMotionRange(float radius = 15.0f, float deadRadius = 5.0f, float angle = 60.0f) {
     angle /= 2;
-    MotionRange motionRange {Pointf {}, radius,
+    MotionRange motionRange {radius,
                              Pointf {-deadRadius*tan(angle*M_PI/180.0f), deadRadius}, Pointf {0, radius},
                              Pointf {deadRadius*tan(angle*M_PI/180.0f), deadRadius}, Pointf {0, radius}};
 
-    motionRange.range[1].rotateXY(angle);
-    motionRange.range[3].rotateXY(-angle);
+    motionRange.range[1].rotateZ(angle);
+    motionRange.range[3].rotateZ(-angle);
     return motionRange;
   }
 
   static Pointf mapToGlobal(const Pointf& localPoint, float legOffset, float mountingAngle) {
     Pointf globalPoint = localPoint;
     globalPoint.y += legOffset;
-    globalPoint.rotateXY(-mountingAngle);
+    globalPoint.rotateZ(-mountingAngle);
     return globalPoint;
   }
 
   static Pointf mapToLocal(const Pointf& globalPoint, float legOffset, float mountingAngle) {
     Pointf localPoint = globalPoint;
-    localPoint.rotateXY(mountingAngle);
+    localPoint.rotateZ(mountingAngle);
     localPoint.y -= legOffset;
     return localPoint;
   }
@@ -47,16 +47,11 @@ void Leg::update(uint32_t currentMillis) {
   tibiaServo.update(currentMillis);
 }
 
-/*
-* Possible Problems
-* - More than two intersections ()
-*
-*/
-uint8_t Leg::getLargestPossibleDistance(float slope, bool inDirectionOfFunction) const {
+Pointf Leg::getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUpwards) const {
   //Create function in local coordinate system
   LinearFunction temp {slope, 0};
   temp.rotateXY(this->mountingAngle);
-  LinearFunction function {temp.slope, mapToLocal(this->position, this->legOffset, this->mountingAngle)};
+  LinearFunction function {temp.slope, this->position};
 
   //LinearFunction has exactly two intersections with the motionRange
   Pointf intersections[2];
@@ -66,32 +61,26 @@ uint8_t Leg::getLargestPossibleDistance(float slope, bool inDirectionOfFunction)
   LinearFunction bottomMotionRange {motionRange.range[0], motionRange.range[2]};
   LinearFunction rightMotionRange {motionRange.range[2], motionRange.range[3]};
 
-  //Find both insections. Intersection will be saved in the interection array. Index shows how much intersections have been found
+  //Find both insections. Intersection will be saved in the interection array.
+  //Index shows how much intersections have been found
   if(function.getIntersectionWith(leftMotionRange, intersections[index])) {
-    avr::cout << "leftMotionRange " << intersections[index] << '\n';
     if(intersections[index].x >= motionRange.range[0].x && intersections[index].x <= motionRange.range[1].x) {
       ++index;
     }
   }
   if(function.getIntersectionWith(bottomMotionRange, intersections[index])) {
-    avr::cout << "bottomMotionRange " << intersections[index] << '\n';
     if(intersections[index].x > motionRange.range[0].x && intersections[index].x  < motionRange.range[2].x) {
       ++index;
     }
   }
   if(index < 2 && function.getIntersectionWith(rightMotionRange, intersections[index])) {
-    avr::cout << "rightMotionRange " << intersections[index] << '\n';
     if(intersections[index].x >= motionRange.range[2].x && intersections[index].x <= motionRange.range[3].x) {
       ++index;
     }
   }
   if(index < 2) {
     Pointf circleIntersections[2];
-    function.getIntersectionWith(motionRange.circleCenter, motionRange.radius, circleIntersections);
-
-    avr::cout << "circle1 " << circleIntersections[0] << '\n';
-    avr::cout << "circle2 " << circleIntersections[1] << '\n';
-
+    function.getIntersectionWith(Pointf {0.0f, 0.0f}, motionRange.radius, circleIntersections);
 
     for(uint8_t i = 0; i < 2; ++i) {
       if(circleIntersections[i].x > motionRange.range[1].x && circleIntersections[i].y > motionRange.range[1].y
@@ -100,24 +89,22 @@ uint8_t Leg::getLargestPossibleDistance(float slope, bool inDirectionOfFunction)
       }
     }
   }
-  avr::cout << intersections[0] << '\n';
-  avr::cout << intersections[1] << '\n';
 
   //Find the intersection of interest
-  if(inDirectionOfFunction) {
+  if(moveUpwards) {
     if(intersections[0].x > intersections[1].x ) {
-      index = 0;
+      return intersections[0];
     } else {
-      index = 1;
+      return intersections[1];
     }
   } else {
     if(intersections[0].x < intersections[1].x ) {
-      index = 0;
+      return intersections[0];
     } else {
-      index = 1;
+      return intersections[1];
     }
   }
-  return abs(position.x-intersections[index].x);
+  return Pointf {};
 }
 
 void Leg::calculateMovementTo(const Pointf& destination, Pointf movementPath[], uint8_t size) const {
@@ -160,7 +147,7 @@ void Leg::updateAngles() {
   setAllAngles(angleCoxa, angleFemur, angleTibia);
 }
 
-void Leg::setPosition(const Pointf& position) {
+void Leg::setGlobalPosition(const Pointf& position) {
   this->position = mapToLocal(position, this->legOffset, this->mountingAngle);
 }
 
@@ -168,12 +155,12 @@ Pointf Leg::getGlobalPosition() const {
   return mapToGlobal(this->position, this->legOffset, this->mountingAngle);
 }
 
-const Pointf& Leg::getLocalPosition() const {
-  return this->position;
+void Leg::setLocalPosition(const Pointf& position) {
+  this->position = position;
 }
 
-float Leg::getLegOffset() const {
-  return this->legOffset;
+const Pointf& Leg::getLocalPosition() const {
+  return this->position;
 }
 
 void Leg::setAllAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
@@ -187,13 +174,13 @@ void Leg::setAngle(Joint joint, uint8_t angle) {
     switch(joint) {
       case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
       case Joint::Femur:  this->femurServo.setAngle(angle - femurAngleOffset); break;
-      case Joint::Tibia:  this->tibiaServo.setAngle(180.0f - angle); break;
+      case Joint::Tibia:  this->tibiaServo.setAngle(180.0f - angle + tibiaAngleOffset); break;
     }
   } else {
     switch(joint) {
       case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
       case Joint::Femur:  this->femurServo.setAngle(180.0f + femurAngleOffset - angle); break;
-      case Joint::Tibia:  this->tibiaServo.setAngle(angle); break;
+      case Joint::Tibia:  this->tibiaServo.setAngle(angle - tibiaAngleOffset); break;
     }
   }
 }

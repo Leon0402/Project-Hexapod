@@ -42,10 +42,10 @@ void LinearFunction::getIntersectionWith(const Pointf& circleCenter, uint8_t rad
 
 void LinearFunction::rotateXY(float angle) {
   Pointf point1 {1, this->slope*1 + this->yIntercept};
-  point1.rotateXY(angle);
+  point1.rotateZ(angle);
 
   Pointf point2 {-1, this->slope*-1 + this->yIntercept };
-  point2.rotateXY(angle);
+  point2.rotateZ(angle);
 
   if(point1.x == point2.x) {
     this->slope = 255;

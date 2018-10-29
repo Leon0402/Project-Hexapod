@@ -14,7 +14,6 @@
 enum class Joint { Coxa, Femur, Tibia };
 
 struct MotionRange {
-  Pointf circleCenter;
   float radius;
   Pointf range[4];
 };
@@ -32,7 +31,7 @@ public:
 
   void update(uint32_t currentMillis);
 
-  uint8_t getLargestPossibleDistance(float slope, bool inDirectionOfFunction) const;
+  Pointf getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUpwards) const;
 
   /*!
   @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
@@ -46,11 +45,11 @@ public:
   void updateAngles();
 
   //getter and setter
-  void setPosition(const Pointf& position);
+  void setGlobalPosition(const Pointf& position);
   Pointf getGlobalPosition() const;
-  const Pointf& getLocalPosition() const;
 
-  float getLegOffset() const;
+  void setLocalPosition(const Pointf& position);
+  const Pointf& getLocalPosition() const;
 
   /*!Servo wrapper functions!*/
 
@@ -95,8 +94,10 @@ private:
   constexpr static float tibiaLength = 12.0f;
   //Differnce between femurMountingHeight (calculations are done from here) and the orginin
   constexpr static float zOffset = 5.0f;
-  //The servo has 45° at 0°
-  constexpr static float femurAngleOffset = 45.0f;
+  //The servo has 45° at 0° + tibia is bent
+  constexpr static float femurAngleOffset = 37.5f;
+  //Because tibia leg is bendt
+  constexpr static float tibiaAngleOffset = 15.0f;
   /****************************************************************/
 
   Servo coxaServo;
