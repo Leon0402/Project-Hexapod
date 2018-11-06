@@ -47,11 +47,12 @@ void Leg::update(uint32_t currentMillis) {
   tibiaServo.update(currentMillis);
 }
 
-Pointf Leg::getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUpwards) const {
-  //Create function in local coordinate system
-  LinearFunction temp {slope, 0};
-  temp.rotateXY(this->mountingAngle);
-  LinearFunction function {temp.slope, this->position};
+Pointf Leg::getLastLinearPoint(float slope, bool moveUpwards) const {
+  if(this->isLegOnLeftSide()) {
+    moveUpwards = !moveUpwards;
+  }
+
+  LinearFunction function = this->getLinearFunction(slope);
 
   //LinearFunction has exactly two intersections with the motionRange
   Pointf intersections[2];
@@ -64,7 +65,7 @@ Pointf Leg::getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUp
   //Find both insections. Intersection will be saved in the interection array.
   //Index shows how much intersections have been found
   if(function.getIntersectionWith(leftMotionRange, intersections[index])) {
-    if(intersections[index].x >= motionRange.range[0].x && intersections[index].x <= motionRange.range[1].x) {
+    if(intersections[index].x >= motionRange.range[1].x && intersections[index].x <= motionRange.range[0].x) {
       ++index;
     }
   }
@@ -83,8 +84,7 @@ Pointf Leg::getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUp
     function.getIntersectionWith(Pointf {0.0f, 0.0f}, motionRange.radius, circleIntersections);
 
     for(uint8_t i = 0; i < 2; ++i) {
-      if(circleIntersections[i].x > motionRange.range[1].x && circleIntersections[i].y > motionRange.range[1].y
-        && circleIntersections[i].x < motionRange.range[3].x) {
+      if(circleIntersections[i].y > motionRange.range[1].y) {
         intersections[index] = circleIntersections[i];
       }
     }
@@ -104,34 +104,27 @@ Pointf Leg::getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUp
       return intersections[1];
     }
   }
-  return Pointf {};
 }
 
-void Leg::calculateMovementTo(const Pointf& destination, Pointf movementPath[], uint8_t size) const {
-
-  // Calculates distance between position.x and destination.x and divides it through the number of steps bewteen these positions + 1
-  // -> position.x + distance/size gives the x1 coordinate of the next step
-  // d = (x2 - x1)/ STEPS +1
-  float nextStep = (destination.x - position.x)/size;
-
-  // Sets up a function equation (linear) to resolve a y value to a x value
-  // m = (y2 - y1) / (x2 - x1)
-  float slope = (destination.y - position.y) / (destination.x - position.x);
-  // n = y1 - m*x1
-  float yIntercept = destination.y - slope*destination.x;
-
-  // Sets up a function equation (square) to resolve a z value to a x value
-  // P0 = starting point, P1 = highest point, P2 = endpoint
+// Sets up a function equation (square) to resolve a z value to a x value
+// P0 = starting point, P1 = highest point, P2 = endpoint
+QuadraticFunction Leg::getQuadraticFunction(const Pointf& destination, const Pointf& position, float jumpHeight) const {
   //a = (z2 + z0 - 2z1 - 2* sqrt(z0*z2 - z2*z1 - z0*z1 + z1*z1)) / (x0-x2)²
-  float height = 4;
-  float a = (destination.z + position.z - 2*height - 2*sqrt(position.z*destination.z - destination.z*height - position.z*height + height*height)) / ((position.x - destination.x)*(position.x - destination.x));
+  float a = (destination.z + position.z - 2.0f*jumpHeight - 2.0f*sqrt(position.z*destination.z - destination.z*jumpHeight - position.z*jumpHeight + jumpHeight*jumpHeight)) / ((position.x - destination.x)*(position.x - destination.x));
   //b = -1*(a*x2*x2 + z0 - a*x0*x0 - z2) / (-2*a*t2 + 2*a*t0)
-  float b = -1.0f*(a*destination.x*destination.x + position.z - a*position.x*position.x - destination.z) / (-2*a*destination.x + 2*a*position.x);
+  float b = -1.0f*(a*destination.x*destination.x + position.z - a*position.x*position.x - destination.z) / (-2.0f*a*destination.x + 2.0f*a*position.x);
   //c = z1 = HEIGHT
+  float c = jumpHeight;
 
-  calculateParabolicMovement(movementPath, size, nextStep, slope, yIntercept, a, b, height);
+  return QuadraticFunction {a, b, c};
 }
 
+LinearFunction Leg::getLinearFunction(float slope) const {
+  //Create function in local coordinate system
+  LinearFunction temp {slope, 0};
+  temp.rotateXY(this->mountingAngle);
+  return LinearFunction {temp.slope, this->position};
+}
 
 void Leg::updateAngles() {
   //Some calculations needed for the calculation of femur and tibia
@@ -161,6 +154,12 @@ void Leg::setLocalPosition(const Pointf& position) {
 
 const Pointf& Leg::getLocalPosition() const {
   return this->position;
+}
+
+void Leg::rotateXYZ(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle) {
+  Pointf globalPosition = this->getGlobalPosition();
+  globalPosition.rotateXYZ(static_cast<float>(yawAngle), static_cast<float>(pitchAngle), static_cast<float>(rollAngle));
+  this->setGlobalPosition(globalPosition);
 }
 
 void Leg::setAllAngles(uint8_t angleCoxa, uint8_t angleFemur, uint8_t angleTibia) {
@@ -202,20 +201,6 @@ void Leg::move(Joint joint, uint16_t time) {
 /******************************************************************************************************************************************************/
 //private
 /******************************************************************************************************************************************************/
-
-void Leg::calculateParabolicMovement(Pointf movementPath[], uint8_t size, float nextStep, float slope, float yIntercept, float a, float b, float c) const {
-  Pointf nextPosition {this->position};
-
-  for(uint8_t i = 0; i < size; i++) {
-    nextPosition.x += nextStep;
-    //f(x) = m*x + n
-    nextPosition.y = slope*nextPosition.x + yIntercept;
-    //f(x) = a*(x - b)² + c
-    nextPosition.z = a*((nextPosition.x - b)*(nextPosition.x-b)) + c;
-
-    movementPath[i] = nextPosition;
-  }
-}
 
 float Leg::calculateCoxaAngle() const {
   //a = tan⁻¹(x/y)

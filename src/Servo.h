@@ -53,7 +53,7 @@ public:
   static const uint8_t angleRange = 180;
 
 private:
-  uint16_t mapToPulseWidth(uint8_t angle);
+  uint16_t mapToPulseWidth(float angle);
 
 
   Servocontroller servocontroller;

@@ -2,8 +2,8 @@
 
 #ifndef X86_64
   #include <avr/interrupt.h>
-  #include <util/delay.h>
   #include <time.h>
+  #include <util/delay.h>
 #endif
 
 namespace {
@@ -28,33 +28,25 @@ int main() {
   TIMSK1 |= (1 << OCIE1A);
   #endif
 
-  hexapod.startPosition_test();
-  //hexapod.roll(20);
-  hexapod.moveLinear(0, true);
-
-/*
-  while(1) {
-    char read = avr::cout.read();
-
-    avr::cout.write(read);
-
-    switch(read) {
-      case 't': hexapod.test(); break;
-      default: avr::cout.write("a");
-    }
-  }*/
+  //hexapod.bodyIk_test();
+  //hexapod.moveForward_test();
 
   while(1);
 }
 
 #ifndef X86_64
 //update system time
-ISR(TIMER2_COMPA_vect){
+ISR(TIMER2_COMPA_vect) {
   system_tick();
 }
 
 //update servos
-ISR(TIMER1_COMPA_vect){
+ISR(TIMER1_COMPA_vect) {
   hexapod.update(time(nullptr));
+}
+
+//UART read commands from the esp / serial console
+ISR(USART_RX_vect) {
+  avr::cout.write(avr::cout.read());
 }
 #endif

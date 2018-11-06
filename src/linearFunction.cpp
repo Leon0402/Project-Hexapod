@@ -16,6 +16,10 @@ LinearFunction::LinearFunction(Pointf point1, Pointf point2)
 : slope {(point1.y - point2.y)/(point1.x - point2.x)},
   yIntercept {point1.y - slope*point1.x} {}
 
+float LinearFunction::getY(float x) const {
+  return this->slope*x + this->yIntercept;
+}
+
 bool LinearFunction::getIntersectionWith(const LinearFunction& function, Pointf& intersection) const {
   if(this->slope == function.slope) {
     return false;

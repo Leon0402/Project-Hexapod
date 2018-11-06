@@ -4,6 +4,7 @@
 #include "Servo.h"
 #include "Point.h"
 #include "LinearFunction.h"
+#include "QuadraticFunction.h"
 
 #ifndef X86_64
   #include <inttypes.h>
@@ -29,27 +30,39 @@ public:
   */
   Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, float legOffset, float mountingAngle);
 
+  /*!
+  @brief Updates all Servos
+  */
   void update(uint32_t currentMillis);
 
-  Pointf getNextLinearPoint(float slope, uint8_t stepsUntilLimit, bool moveUpwards) const;
+  /*!
+  @brief Returns the intersection bewteeen the linear function with the given slope and the movement range
+  */
+  Pointf getLastLinearPoint(float slope, bool moveUpwards) const;
 
   /*!
-  @brief Calculates a movement path (parabolic) to reach a point from the legs current position. The points are written in the given array
-  @param destination The destination given in the Hexapod`s coordinate system
+  @brief Puts up a quadratic function from position to destination. Can be used to resolve a z value to a x value
   */
-  void calculateMovementTo(const Pointf& destination, Pointf movementPath[], uint8_t size) const;
+  QuadraticFunction getQuadraticFunction(const Pointf& destination, const Pointf& position, float jumpHeight) const;
+
+  /*!
+  @brief Puts up a linear function with the given slope through the current position. Can be used to resolve a y value to a x value
+  */
+  LinearFunction getLinearFunction(float slope) const;
 
   /*!
   @brief Updates the angles of the servos, so the current position can be reached
   */
   void updateAngles();
 
-  //getter and setter
+
   void setGlobalPosition(const Pointf& position);
   Pointf getGlobalPosition() const;
 
   void setLocalPosition(const Pointf& position);
   const Pointf& getLocalPosition() const;
+
+  void rotateXYZ(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle);
 
   /*!Servo wrapper functions!*/
 
@@ -95,9 +108,9 @@ private:
   //Differnce between femurMountingHeight (calculations are done from here) and the orginin
   constexpr static float zOffset = 5.0f;
   //The servo has 45° at 0° + tibia is bent
-  constexpr static float femurAngleOffset = 37.5f;
+  constexpr static float femurAngleOffset = 45;//37.5f;
   //Because tibia leg is bendt
-  constexpr static float tibiaAngleOffset = 15.0f;
+  constexpr static float tibiaAngleOffset = 0;//15.0f;
   /****************************************************************/
 
   Servo coxaServo;

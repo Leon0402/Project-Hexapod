@@ -12,7 +12,7 @@ F_CPU      := 16000000
 #Compiler
 CXX       := avr-g++
 LDFLAGS   :=
-CXXFLAGS  := -Wall -std=c++11 -c
+CXXFLAGS  := -Wall -std=c++11 -fno-threadsafe-statics -c
 
 # Commands
 REMOVE := rm -r -f

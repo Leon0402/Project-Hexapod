@@ -21,7 +21,7 @@ Stream::Stream() {
       UCSR0A &= ~(1 << U2X0);
     #endif
 
-    //UCSR0B |= (1<<RXEN0);
+    UCSR0B |= (1<<RXCIE0);
   #endif
 }
 

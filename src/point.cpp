@@ -14,7 +14,7 @@ void Pointf::rotateY(float angle) {
   float x0 = this->x;
   float z0 = this->z;
   this->x = x0*cos(angle*M_PI/180.0f)  + z0*sin(angle*M_PI/180.0f);
-  this->z = x0*-cos(angle*M_PI/180.0f) + z0*cos(angle*M_PI/180.0f);
+  this->z = x0*-sin(angle*M_PI/180.0f) + z0*cos(angle*M_PI/180.0f);
 }
 
 void Pointf::rotateZ(float angle) {
@@ -32,8 +32,8 @@ void Pointf::rotateXYZ(float yawAngle, float pitchAngle, float rollAngle) {
           + y0*(cos(yawAngle*M_PI/180.0f)*sin(pitchAngle*M_PI/180.0f)*sin(rollAngle*M_PI/180.0f) - sin(yawAngle*M_PI/180.0f)*cos(rollAngle*M_PI/180.0f))
           + z0*(cos(yawAngle*M_PI/180.0f)*sin(pitchAngle*M_PI/180.0f)*cos(rollAngle*M_PI/180.0f) + sin(yawAngle*M_PI/180.0f)*sin(rollAngle*M_PI/180.0f));
   this->y = x0*sin(yawAngle*M_PI/180.0f)*cos(pitchAngle*M_PI/180.0f)
-          + y0*(sin(yawAngle*M_PI/180.0f)*sin(pitchAngle)*sin(rollAngle*M_PI/180.0f) + cos(yawAngle*M_PI/180.0f)*cos(rollAngle*M_PI/180.0f))
-          + z0*(sin(yawAngle*M_PI/180.0f)*sin(pitchAngle)*cos(rollAngle*M_PI/180.0f) - cos(yawAngle*M_PI/180.0f)*sin(rollAngle*M_PI/180.0f));
+          + y0*(sin(yawAngle*M_PI/180.0f)*sin(pitchAngle*M_PI/180.0f)*sin(rollAngle*M_PI/180.0f) + cos(yawAngle*M_PI/180.0f)*cos(rollAngle*M_PI/180.0f))
+          + z0*(sin(yawAngle*M_PI/180.0f)*sin(pitchAngle*M_PI/180.0f)*cos(rollAngle*M_PI/180.0f) - cos(yawAngle*M_PI/180.0f)*sin(rollAngle*M_PI/180.0f));
   this->z = x0*-sin(pitchAngle*M_PI/180.0f)
           + y0*cos(pitchAngle*M_PI/180.0f)*sin(rollAngle*M_PI/180.0f)
           + z0*cos(pitchAngle*M_PI/180.0f)*cos(rollAngle*M_PI/180.0f);

@@ -27,22 +27,22 @@ public:
   /*!
   @brief Complete body rotation
   */
-  void bodyIk(float yawAngle, float pitchAngle, float rollAngle);
-
-  /*!
-  @brief Body movement: roll
-  */
-  void roll(float angle);
-
-  /*!
-  @brief Body movement: pitch
-  */
-  void pitch(float angle);
+  void bodyIk(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle);
 
   /*
   @brief Body movement: yaw
   */
-  void yaw(float angle);
+  void yaw(int8_t angle);
+
+  /*!
+  @brief Body movement: roll
+  */
+  void roll(int8_t angle);
+
+  /*!
+  @brief Body movement: pitch
+  */
+  void pitch(int8_t angle);
 
   /*!
   @brief Moves a leg to a point in the global coordinate system in the given time
@@ -50,7 +50,7 @@ public:
   @param desination point in the global coordinate system
   @param time time in milliseconds
   */
-  void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
+  //void moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
 
   /*!
   @brief Moves a leg to a point in the global coordinate system in the given time following a parabolic function
@@ -58,22 +58,18 @@ public:
   @param desination point in the global coordinate system
   @param time time in milliseconds
   */
-  void moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
-
+  //void moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time = 0);
 
   /*!
   @brief Some test scripts, moves forwards
   */
-  void startPosition_test();
-  void calibration_test();
   void moveForward_test();
-  void roll_test();
-  void pitch_test();
+  void bodyIk_test();
 
 private:
-  float rollAngle;
-  float pitchAngle;
-  float yawAngle;
+  int8_t yawAngle;
+  int8_t pitchAngle;
+  int8_t rollAngle;
 
   Servocontroller servocontroller1;
   Servocontroller servocontroller2;

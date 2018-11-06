@@ -116,6 +116,6 @@ void Servo::setAngle(uint8_t angle) {
 /******************************************************************************************************************************************************/
 // private
 /******************************************************************************************************************************************************/
-uint16_t Servo::mapToPulseWidth(uint8_t angle) {
+uint16_t Servo::mapToPulseWidth(float angle) {
   return ((angle * (this->servoMax - this->servoMin) * 2.0f) / Servo::angleRange + 1.0f) / 2.0f + this->servoMin;
 }

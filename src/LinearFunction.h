@@ -16,6 +16,7 @@ public:
   LinearFunction(float slope, Pointf point1);
   LinearFunction(Pointf point1, Pointf point2);
 
+  float getY(float x) const;
   bool getIntersectionWith(const LinearFunction& linearFunction, Pointf& intersection) const;
   void getIntersectionWith(const Pointf& circleCenter, uint8_t radius, Pointf intersections[2]) const;
   void rotateXY(float angle);
