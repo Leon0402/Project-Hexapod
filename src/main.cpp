@@ -1,14 +1,17 @@
-#include "Hexapod.h"
+  #include "Hexapod.h"
 
 #ifndef X86_64
   #include <avr/interrupt.h>
   #include <time.h>
   #include <util/delay.h>
+  #include <string.h>
 #endif
 
 namespace {
   Hexapod hexapod {};
 }
+
+void executeFunction(char functionName);
 
 int main() {
 
@@ -34,6 +37,25 @@ int main() {
   while(1);
 }
 
+void executeFunction(char functionName) {
+  char buffer[10];
+  avr::cout.read(buffer, sizeof buffer / sizeof buffer[0]);
+  switch(functionName) {
+    case 'b': avr::cout << strtok (buffer, ",") << '\n'; break;
+  }
+  avr::cout << "Test" << '\n';
+/*
+  char * argument;
+	argument = strtok (command, ",");
+	while(argument) {
+    while(*argument) {
+      avr::cout << *argument;
+      argument++;
+    }
+		argument = strtok (NULL, ",");
+	}*/
+}
+
 #ifndef X86_64
 //update system time
 ISR(TIMER2_COMPA_vect) {
@@ -47,6 +69,6 @@ ISR(TIMER1_COMPA_vect) {
 
 //UART read commands from the esp / serial console
 ISR(USART_RX_vect) {
-  avr::cout.write(avr::cout.read());
+  executeFunction(avr::cout.read());
 }
 #endif

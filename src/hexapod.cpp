@@ -2,7 +2,6 @@
 
 #include "Servo.h"
 #include "Point.h"
-#include "Gait.h"
 
 #ifndef X86_64
   #include <util/delay.h>
@@ -42,44 +41,67 @@ void Hexapod::update(uint32_t currentMillis) {
   }
 }
 
-void Hexapod::moveLinear(float slope, bool moveUpwards) {
-  int8_t lastPhase[6] = {-1, -1, -1, -1, -1, -1};
-  Pointf oldPosition[6];
+template<uint8_t GAIT_PATTERN_SIZE, uint8_t GAIT_START_SEQUENZE_SIZE, uint8_t GAIT_END_SEQUENZE_SIZE>
+void Hexapod::moveLinear(const Gait<GAIT_PATTERN_SIZE, GAIT_START_SEQUENZE_SIZE, GAIT_END_SEQUENZE_SIZE>& gait, float slope, bool moveUpwards, bool startSequenze, bool endSequenze) {
+  uint8_t size = GAIT_PATTERN_SIZE;
+  if(endSequenze) {
+    size += GAIT_END_SEQUENZE_SIZE;
+  }
+  uint8_t pattern[size];
 
-  for(uint8_t cycle : waveGait.pattern) {
-    for(uint8_t i = 0; i < 50; ++i) {
+  for(uint8_t i = 0; i < GAIT_PATTERN_SIZE; ++i) {
+    pattern[i] = gait.pattern[i];
+  }
+
+  if(startSequenze) {
+    for(uint8_t i = 0; i < GAIT_START_SEQUENZE_SIZE; ++i) {
+      pattern[i] = gait.startSequenze[i];
+    }
+  }
+
+  if(endSequenze) {
+    for(uint8_t i = 0; i < GAIT_END_SEQUENZE_SIZE; ++i) {
+      pattern[GAIT_PATTERN_SIZE + i] = gait.endSequenze[i];
+    }
+  }
+
+  int8_t lastPhase[6] = {-1, -1, -1, -1, -1, -1};
+  float nextSteps[6] = {0};
+  LinearFunction linearFunctions[6];
+  static QuadraticFunction quadraticFunctions[6];
+
+  for(uint8_t cycle : pattern) {
+    for(uint8_t i = 0; i < 3; ++i) {
       for(uint8_t j = 0; j < 6; ++j) {
 
         uint8_t phase;
         ((cycle >> j) & 0x01) ? phase = 1 : phase = 0;
 
+        Pointf localPosition = this->legs[j].getLocalPosition();
+
         if(phase != lastPhase[j]) {
           lastPhase[j] = phase;
-          oldPosition[j] = this->legs[j].getLocalPosition();
+          linearFunctions[j] = this->legs[j].getLinearFunction(slope);
+
+          if(phase == 1) {
+            Pointf destination = this->legs[j].getLastLinearPoint(slope, moveUpwards);
+            nextSteps[j] = (destination.x - localPosition.x)/(gait.swingPhaseCycles*3);
+            //patch, needs to be optimized
+            if(localPosition.z <= -10.0f) {
+              quadraticFunctions[j] = this->legs[j].getQuadraticFunction(destination, localPosition, -7.5f);
+            }
+          } else {
+            Pointf destination = this->legs[j].getLastLinearPoint(slope, !moveUpwards);
+            nextSteps[j] = (destination.x - localPosition.x)/(gait.stancePhaseCycles*3);
+          }
         }
 
-        Pointf destination {};
-        Pointf nextPosition {};
-        float nextStep;
-
+        float x = localPosition.x + nextSteps[j];
+        Pointf nextPosition {x, linearFunctions[j].getY(x)};
         if(phase == 1) {
-          destination = this->legs[j].getLastLinearPoint(slope, moveUpwards);
-          nextStep = (destination.x - oldPosition[j].x)/(waveGait.swingPhaseCycles*50);
-
-          LinearFunction linearFunction = this->legs[j].getLinearFunction(slope);
-          destination.z = oldPosition[j].z;
-          QuadraticFunction quadraticFunction = this->legs[j].getQuadraticFunction(destination, oldPosition[j], -7.5f);
-          nextPosition.x = this->legs[j].getLocalPosition().x + nextStep;
-          nextPosition.y = linearFunction.getY(nextPosition.x);
-          nextPosition.z = quadraticFunction.getY(nextPosition.x);
+          nextPosition.z = quadraticFunctions[j].getY(x);
         } else {
-          destination = this->legs[j].getLastLinearPoint(slope, !moveUpwards);
-          nextStep = (destination.x - oldPosition[j].x)/(waveGait.stancePhaseCycles*50);
-
-          LinearFunction linearFunction = this->legs[j].getLinearFunction(slope);
-          nextPosition.x = this->legs[j].getLocalPosition().x + nextStep;
-          nextPosition.y = linearFunction.getY(nextPosition.x);
-          nextPosition.z = oldPosition[j].z;
+          nextPosition.z = localPosition.z;
         }
 
         this->legs[j].setLocalPosition(nextPosition);
@@ -89,6 +111,52 @@ void Hexapod::moveLinear(float slope, bool moveUpwards) {
     }
   }
 }
+
+/*
+void Hexapod::moveLinear(const Gait<uint8_t>& gait, float slope, bool moveUpwards) {
+  int8_t lastPhase[6] = {-1, -1, -1, -1, -1, -1};
+  float nextSteps[6] = {0};
+  LinearFunction linearFunctions[6];
+  QuadraticFunction quadraticFunctions[6];
+
+  for(uint8_t cycle : gait.pattern) {
+    for(uint8_t i = 0; i < 40; ++i) {
+      for(uint8_t j = 0; j < 6; ++j) {
+
+        uint8_t phase;
+        ((cycle >> j) & 0x01) ? phase = 1 : phase = 0;
+
+        Pointf localPosition = this->legs[j].getLocalPosition();
+
+        if(phase != lastPhase[j]) {
+          lastPhase[j] = phase;
+          linearFunctions[j] = this->legs[j].getLinearFunction(slope);
+
+          if(phase == 1) {
+            Pointf destination = this->legs[j].getLastLinearPoint(slope, moveUpwards);
+            nextSteps[j] = (destination.x - localPosition.x)/(gait.swingPhaseCycles*40);
+            quadraticFunctions[j] = this->legs[j].getQuadraticFunction(destination, localPosition, -7.5f);
+          } else {
+            Pointf destination = this->legs[j].getLastLinearPoint(slope, !moveUpwards);
+            nextSteps[j] = (destination.x - localPosition.x)/(gait.stancePhaseCycles*40);
+          }
+        }
+
+        float x = localPosition.x + nextSteps[j];
+        Pointf nextPosition {x, linearFunctions[j].getY(x)};
+        if(phase == 1) {
+          nextPosition.z = quadraticFunctions[j].getY(x);
+        } else {
+          nextPosition.z = localPosition.z;
+        }
+
+        this->legs[j].setLocalPosition(nextPosition);
+        this->legs[j].updateAngles();
+        this->legs[j].moveAll();
+      }
+    }
+  }
+}*/
 
 void Hexapod::bodyIk(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle) {
   if(yawAngle > 45 || yawAngle < -45 || pitchAngle > 45 || pitchAngle < -45 || rollAngle > 45|| rollAngle < -45) {
@@ -162,9 +230,12 @@ void Hexapod::moveLegToPoint(LegPosition legPosition, const Pointf& destination,
 // Test scripts
 /******************************************************************************************************************************************************/
 void Hexapod::moveForward_test() {
-  for(uint8_t i = 0; i < 4; ++i) {
-     this->moveLinear(0, true);
+  this->moveLinear(rippleGait, 0, true, true, false);
+
+  for(uint8_t i = 0; i < 1; ++i) {
+     this->moveLinear(rippleGait , 0 , true);
   }
+  this->moveLinear(rippleGait, 0 , true, false, true);
 }
 
 void Hexapod::bodyIk_test() {

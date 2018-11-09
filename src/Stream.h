@@ -32,6 +32,7 @@ public:
   void write(const char* data);
 
   char read();
+  void read(char* Buffer, uint8_t size);
 
   //Converts T into a char array and calls write for every char
   template<typename T>
@@ -58,6 +59,11 @@ inline void Stream::print<char>(char data) {
 
 template<>
 inline void Stream::print<const char*>(const char* data) {
+  this->write(data);
+}
+
+template<>
+inline void Stream::print<char*>(char* data) {
   this->write(data);
 }
 

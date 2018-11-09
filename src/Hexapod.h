@@ -3,6 +3,7 @@
 
 #include "Servocontroller.h"
 #include "Leg.h"
+#include "Gait.h"
 
 enum class LegPosition { FrontLeft, MiddleLeft, RearLeft, FrontRight, MiddleRight, RearRight};
 
@@ -22,7 +23,8 @@ public:
   /*!
   @brief Moves Linear
   */
-  void moveLinear(float slope, bool moveUpwards);
+  template<uint8_t GAIT_PATTERN_SIZE, uint8_t GAIT_START_SEQUENZE_SIZE, uint8_t GAIT_END_SEQUENZE_SIZE>
+  void moveLinear(const Gait<GAIT_PATTERN_SIZE, GAIT_START_SEQUENZE_SIZE, GAIT_END_SEQUENZE_SIZE>& gait, float slope, bool moveUpwards, bool startSequenze = false, bool endSequenze = false);
 
   /*!
   @brief Complete body rotation

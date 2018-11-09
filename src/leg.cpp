@@ -89,6 +89,8 @@ Pointf Leg::getLastLinearPoint(float slope, bool moveUpwards) const {
       }
     }
   }
+  intersections[0].z = position.z;
+  intersections[1].z = position.z;
 
   //Find the intersection of interest
   if(moveUpwards) {
