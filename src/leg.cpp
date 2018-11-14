@@ -89,6 +89,8 @@ Pointf Leg::getLastLinearPoint(float slope, bool moveUpwards) const {
       }
     }
   }
+  intersections[0].z = position.z;
+  intersections[1].z = position.z;
 
   //Find the intersection of interest
   if(moveUpwards) {
@@ -106,11 +108,42 @@ Pointf Leg::getLastLinearPoint(float slope, bool moveUpwards) const {
   }
 }
 
+Pointf Leg::getNextLinearPoint(float slope, bool moveUpwards, uint8_t lastPhase, uint8_t currentPhase, uint8_t swingPhaseCycles, uint8_t stancePhaseCycles) const {
+  static LinearFunction linearFunction;
+  static QuadraticFunction quadraticFunction;
+  static float nextStep;
+
+  if(lastPhase != currentPhase) {
+    linearFunction = this->getLinearFunction(slope);
+
+    if(currentPhase) {
+      Pointf destination = this->getLastLinearPoint(slope, moveUpwards);
+      nextStep = (destination.x - this->position.x)/swingPhaseCycles;
+      quadraticFunction = this->getQuadraticFunction(destination, -7.5f, quadraticFunction.getSlope(this->position.x) <= 0);
+    } else {
+      Pointf destination = this->getLastLinearPoint(slope, !moveUpwards);
+      nextStep = (destination.x - this->position.x)/stancePhaseCycles;
+    }
+  }
+
+  float x = this->position.x + nextStep;
+  if(currentPhase) {
+    return Pointf {x, linearFunction.getY(x), quadraticFunction.getY(x)};
+  } else {
+    return Pointf {x, linearFunction.getY(x), position.z};
+  }
+}
+
 // Sets up a function equation (square) to resolve a z value to a x value
 // P0 = starting point, P1 = highest point, P2 = endpoint
-QuadraticFunction Leg::getQuadraticFunction(const Pointf& destination, const Pointf& position, float jumpHeight) const {
-  //a = (z2 + z0 - 2z1 - 2* sqrt(z0*z2 - z2*z1 - z0*z1 + z1*z1)) / (x0-x2)²
-  float a = (destination.z + position.z - 2.0f*jumpHeight - 2.0f*sqrt(position.z*destination.z - destination.z*jumpHeight - position.z*jumpHeight + jumpHeight*jumpHeight)) / ((position.x - destination.x)*(position.x - destination.x));
+QuadraticFunction Leg::getQuadraticFunction(const Pointf& destination, float jumpHeight, bool highestPointReached) const {
+  //a = (z2 + z0 - 2z1 +- 2* sqrt(z0*z2 - z2*z1 - z0*z1 + z1*z1)) / (x0-x2)²
+  float a;
+  if(highestPointReached) {
+    a = (destination.z + position.z - 2.0f*jumpHeight + 2.0f*sqrt(position.z*destination.z - destination.z*jumpHeight - position.z*jumpHeight + jumpHeight*jumpHeight)) / ((position.x - destination.x)*(position.x - destination.x));
+  } else {
+    a = (destination.z + position.z - 2.0f*jumpHeight - 2.0f*sqrt(position.z*destination.z - destination.z*jumpHeight - position.z*jumpHeight + jumpHeight*jumpHeight)) / ((position.x - destination.x)*(position.x - destination.x));
+  }
   //b = -1*(a*x2*x2 + z0 - a*x0*x0 - z2) / (-2*a*t2 + 2*a*t0)
   float b = -1.0f*(a*destination.x*destination.x + position.z - a*position.x*position.x - destination.z) / (-2.0f*a*destination.x + 2.0f*a*position.x);
   //c = z1 = HEIGHT

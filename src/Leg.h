@@ -36,14 +36,17 @@ public:
   void update(uint32_t currentMillis);
 
   /*!
-  @brief Returns the intersection bewteeen the linear function with the given slope and the movement range
+  @brief Returns the intersection between the linear function with the given slope and the movement range
   */
   Pointf getLastLinearPoint(float slope, bool moveUpwards) const;
+
+  Pointf getNextLinearPoint(float slope, bool moveUpwards, uint8_t lastPhase, uint8_t currentPhase, uint8_t swingPhaseCycles, uint8_t stancePhaseCycles) const;
+
 
   /*!
   @brief Puts up a quadratic function from position to destination. Can be used to resolve a z value to a x value
   */
-  QuadraticFunction getQuadraticFunction(const Pointf& destination, const Pointf& position, float jumpHeight) const;
+  QuadraticFunction getQuadraticFunction(const Pointf& destination, float jumpHeight, bool highestPointReached) const;
 
   /*!
   @brief Puts up a linear function with the given slope through the current position. Can be used to resolve a y value to a x value
@@ -108,9 +111,9 @@ private:
   //Differnce between femurMountingHeight (calculations are done from here) and the orginin
   constexpr static float zOffset = 5.0f;
   //The servo has 45° at 0° + tibia is bent
-  constexpr static float femurAngleOffset = 45;//37.5f;
+  constexpr static float femurAngleOffset = 37.5f; //45
   //Because tibia leg is bendt
-  constexpr static float tibiaAngleOffset = 0;//15.0f;
+  constexpr static float tibiaAngleOffset = 15.0f; //0
   /****************************************************************/
 
   Servo coxaServo;

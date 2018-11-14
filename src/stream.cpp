@@ -44,3 +44,16 @@ char Stream::read() {
   while (!(UCSR0A & (1<<RXC0)));
   return UDR0;
 }
+
+void Stream::read(char* buffer, uint8_t size) {
+  uint8_t nextChar = this->read();
+
+  for(uint8_t i = 0; i < size - 1; ++i) {
+    if(nextChar == '\n' || nextChar == '\r') {
+      break;
+    }
+    *buffer++ = nextChar;
+    nextChar = this->read();
+  }
+  *buffer = '\0';
+}

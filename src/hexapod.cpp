@@ -2,7 +2,6 @@
 
 #include "Servo.h"
 #include "Point.h"
-#include "Gait.h"
 
 #ifndef X86_64
   #include <util/delay.h>
@@ -24,11 +23,9 @@ Hexapod::Hexapod()
       Leg { Servo {servocontroller2,  5, 130, 415}, Servo {servocontroller2,  6, 100, 445}, Servo {servocontroller2,  7,  89, 460}, Pointf {0.0f, 7.5f, -15.0f}, 6.5f, 180},
       Leg { Servo {servocontroller2,  0,  85, 445}, Servo {servocontroller2,  1, 105, 458}, Servo {servocontroller2,  2,  80, 370}, Pointf {0.0f, 7.5f, -15.0f}, 8.5f, 242}
     } {
-  for(uint8_t i = 0; i < 6; ++i) {
-    this->legs[i].updateAngles();
-    this->legs[i].moveAll();
-    _delay_ms(1000);
-  }
+      for(uint8_t i = 0; i < 6; ++i) {
+        this->move(static_cast<LegPosition>(i));
+      }
 }
 
 void Hexapod::update(uint32_t currentMillis) {
@@ -39,54 +36,6 @@ void Hexapod::update(uint32_t currentMillis) {
   ++counter;
   if(counter >= 6) {
     counter = 0;
-  }
-}
-
-void Hexapod::moveLinear(float slope, bool moveUpwards) {
-  int8_t lastPhase[6] = {-1, -1, -1, -1, -1, -1};
-  Pointf oldPosition[6];
-
-  for(uint8_t cycle : waveGait.pattern) {
-    for(uint8_t i = 0; i < 50; ++i) {
-      for(uint8_t j = 0; j < 6; ++j) {
-
-        uint8_t phase;
-        ((cycle >> j) & 0x01) ? phase = 1 : phase = 0;
-
-        if(phase != lastPhase[j]) {
-          lastPhase[j] = phase;
-          oldPosition[j] = this->legs[j].getLocalPosition();
-        }
-
-        Pointf destination {};
-        Pointf nextPosition {};
-        float nextStep;
-
-        if(phase == 1) {
-          destination = this->legs[j].getLastLinearPoint(slope, moveUpwards);
-          nextStep = (destination.x - oldPosition[j].x)/(waveGait.swingPhaseCycles*50);
-
-          LinearFunction linearFunction = this->legs[j].getLinearFunction(slope);
-          destination.z = oldPosition[j].z;
-          QuadraticFunction quadraticFunction = this->legs[j].getQuadraticFunction(destination, oldPosition[j], -7.5f);
-          nextPosition.x = this->legs[j].getLocalPosition().x + nextStep;
-          nextPosition.y = linearFunction.getY(nextPosition.x);
-          nextPosition.z = quadraticFunction.getY(nextPosition.x);
-        } else {
-          destination = this->legs[j].getLastLinearPoint(slope, !moveUpwards);
-          nextStep = (destination.x - oldPosition[j].x)/(waveGait.stancePhaseCycles*50);
-
-          LinearFunction linearFunction = this->legs[j].getLinearFunction(slope);
-          nextPosition.x = this->legs[j].getLocalPosition().x + nextStep;
-          nextPosition.y = linearFunction.getY(nextPosition.x);
-          nextPosition.z = oldPosition[j].z;
-        }
-
-        this->legs[j].setLocalPosition(nextPosition);
-        this->legs[j].updateAngles();
-        this->legs[j].moveAll();
-      }
-    }
   }
 }
 
@@ -123,8 +72,7 @@ void Hexapod::bodyIk(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle) {
 
     for(uint8_t i = 0; i < 6; ++i) {
       this->legs[i].rotateXYZ(yawAngleAddition, pitchAngleAddition, rollAngleAddition);
-      this->legs[i].updateAngles();
-      this->legs[i].moveAll();
+      this->move(static_cast<LegPosition>(i));
     }
   } while(yawAngleAddition != 0 || pitchAngleAddition != 0 || rollAngleAddition != 0);
 }
@@ -141,87 +89,20 @@ void Hexapod::roll(int8_t angle) {
     this->bodyIk(this->yawAngle, this->pitchAngle, angle);
 }
 
-/*
-void Hexapod::moveLegDirectlyToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time) {
-  this->legs[static_cast<int>(legPosition)].setGlobalPosition(destination);
-  this->legs[static_cast<int>(legPosition)].updateAngles();
-  this->legs[static_cast<int>(legPosition)].moveAll(time);
+void Hexapod::moveToLocalPoint(const LegPosition& legPosition, const Pointf& destination, uint16_t time) {
+  this->legs[static_cast<uint8_t>(legPosition)].setLocalPosition(destination);
+  this->move(legPosition, time);
 }
 
-void Hexapod::moveLegToPoint(LegPosition legPosition, const Pointf& destination, uint16_t time) {
-  Pointf movementPath[50];
-  this->legs[static_cast<int>(legPosition)].calculateMovementTo(destination, movementPath, 50);
-
-  for(uint8_t i = 0; i < 50; i++) {
-    moveLegDirectlyToPoint(legPosition, movementPath[i]);
-    _delay_ms(10);
-  }
-}*/
-
-/******************************************************************************************************************************************************/
-// Test scripts
-/******************************************************************************************************************************************************/
-void Hexapod::moveForward_test() {
-  for(uint8_t i = 0; i < 4; ++i) {
-     this->moveLinear(0, true);
-  }
+void Hexapod::moveToGlobalPoint(const LegPosition& legPosition, const Pointf& destination, uint16_t time) {
+  this->legs[static_cast<uint8_t>(legPosition)].setGlobalPosition(destination);
+  this->move(legPosition, time);
 }
 
-void Hexapod::bodyIk_test() {
-  this->bodyIk(15, 0, 0);
-  this->bodyIk(7.5, 0, 0);
-  this->bodyIk(15, 0, 0);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0, -15, 0);
-  this->bodyIk(0, -7.5, 0);
-  this->bodyIk(0, -15, 0);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0, 0, 15);
-  this->bodyIk(0, 0, 7.5);
-  this->bodyIk(0, 0, 15);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0,  15,  15);
-  this->bodyIk(0, 0, 0);
-  this->bodyIk(0, -15,  15);
-  this->bodyIk(0, 0, 0);
-  this->bodyIk(0, -15, -15);
-  this->bodyIk(0, 0, 0);
-  this->bodyIk(0,  15, -15);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(-15, 0, 0);
-  this->bodyIk(-7.5, 0, 0);
-  this->bodyIk(-15, 0, 0);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0, 15, 0);
-  this->bodyIk(0, 7.5, 0);
-  this->bodyIk(0, 15, 0);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0, 0, -15);
-  this->bodyIk(0, 0, -7.5);
-  this->bodyIk(0, 0, -15);
-
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0, -15, -15);
-  this->bodyIk(0, 0, 0);
-  this->bodyIk(0,  15, -15);
-  this->bodyIk(0, 0, 0);
-  this->bodyIk(0,  15,  15);
-  this->bodyIk(0, 0, 0);
-  this->bodyIk(0, -15,  15);
-  this->bodyIk(0, 0, 0);
-
-  this->bodyIk(0, 0, 0);
+/******************************************************************************************************************************************************/
+//private
+/******************************************************************************************************************************************************/
+void Hexapod::move(const LegPosition& legPosition, uint16_t time) {
+  this->legs[static_cast<uint8_t>(legPosition)].updateAngles();
+  this->legs[static_cast<uint8_t>(legPosition)].moveAll(time);
 }
