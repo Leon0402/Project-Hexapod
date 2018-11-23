@@ -81,6 +81,7 @@ void Servo::update(uint32_t currentMillis) {
 }
 
 void Servo::move(float speed, float targetSpeed, float acceleration) {
+  while(this->active);
   //If servo has already reached its destinationPulseWidth do not change status to active
   if(this->pulseWidth == this->destinationPulseWidth || speed == 0.0f) {
     return;

@@ -5,27 +5,30 @@
 
 #ifndef X86_64
   #include <util/delay.h>
-  #include <math.h>
+  #include <stdlib.h>
 #else
   #include <cmath>
 #endif
+
+#include "Stream.h"
 
 Hexapod::Hexapod()
 : yawAngle {0}, pitchAngle {0}, rollAngle {0},
   servocontroller1 { Servocontroller {0x40}}, servocontroller2 {Servocontroller {0x41}},
   legs {
-      // Left (Front - Middle - Rear)
-      Leg { Servo {servocontroller1,  0, 105, 465}, Servo {servocontroller1,  1, 100, 470}, Servo {servocontroller1,  2, 110, 467}, Pointf {0.0f, 7.5f, -15.0f}, 8.5f,  62},
-      Leg { Servo {servocontroller1,  5, 130, 400}, Servo {servocontroller1,  6, 100, 475}, Servo {servocontroller1,  7,  85, 445}, Pointf {0.0f, 7.5f, -15.0f}, 6.5f,   0},
-      Leg { Servo {servocontroller1, 13,  85, 435}, Servo {servocontroller1, 14, 132, 492}, Servo {servocontroller1, 15, 100, 470}, Pointf {0.0f, 7.5f, -15.0f}, 8.5f, 298},
-      // Right(Front - Middle - Rear)
-      Leg { Servo {servocontroller2, 13, 120, 450}, Servo {servocontroller2, 14,  85, 455}, Servo {servocontroller2, 15,  95, 380}, Pointf {0.0f, 7.5f, -15.0f}, 8.5f, 118},
-      Leg { Servo {servocontroller2,  5, 130, 415}, Servo {servocontroller2,  6, 100, 445}, Servo {servocontroller2,  7,  89, 460}, Pointf {0.0f, 7.5f, -15.0f}, 6.5f, 180},
-      Leg { Servo {servocontroller2,  0,  85, 445}, Servo {servocontroller2,  1, 105, 458}, Servo {servocontroller2,  2,  80, 370}, Pointf {0.0f, 7.5f, -15.0f}, 8.5f, 242}
-    } {
-      for(uint8_t i = 0; i < 6; ++i) {
-        this->move(static_cast<LegPosition>(i));
-      }
+    // Left (Front - Middle - Rear)
+    Leg { Servo {servocontroller1,  0, 105, 465}, Servo {servocontroller1,  1, 100, 470}, Servo {servocontroller1,  2, 110, 467}, Point<int16_t> {0, 75, -150}, 85,  62},
+    Leg { Servo {servocontroller1,  5, 130, 400}, Servo {servocontroller1,  6, 100, 475}, Servo {servocontroller1,  7,  85, 445}, Point<int16_t> {0, 75, -150}, 65,   0},
+    Leg { Servo {servocontroller1, 13,  85, 435}, Servo {servocontroller1, 14, 132, 492}, Servo {servocontroller1, 15, 100, 470}, Point<int16_t> {0, 75, -150}, 85, 298},
+    // Right(Front - Middle - Rear)
+    Leg { Servo {servocontroller2, 13, 120, 450}, Servo {servocontroller2, 14,  85, 455}, Servo {servocontroller2, 15,  95, 380}, Point<int16_t> {0, 75, -150}, 85, 118},
+    Leg { Servo {servocontroller2,  5, 130, 415}, Servo {servocontroller2,  6, 100, 445}, Servo {servocontroller2,  7,  89, 460}, Point<int16_t> {0, 75, -150}, 65, 180},
+    Leg { Servo {servocontroller2,  0,  85, 445}, Servo {servocontroller2,  1, 105, 458}, Servo {servocontroller2,  2,  80, 370}, Point<int16_t> {0, 75, -150}, 85, 242}
+  } {
+  for(uint8_t i = 0; i < 6; ++i) {
+    this->move(static_cast<LegPosition>(i));
+    _delay_ms(200);
+  }
 }
 
 void Hexapod::update(uint32_t currentMillis) {
@@ -89,12 +92,12 @@ void Hexapod::roll(int8_t angle) {
     this->bodyIk(this->yawAngle, this->pitchAngle, angle);
 }
 
-void Hexapod::moveToLocalPoint(const LegPosition& legPosition, const Pointf& destination, uint16_t time) {
+void Hexapod::moveToLocalPoint(const LegPosition& legPosition, const Point<int16_t>& destination, uint16_t time) {
   this->legs[static_cast<uint8_t>(legPosition)].setLocalPosition(destination);
   this->move(legPosition, time);
 }
 
-void Hexapod::moveToGlobalPoint(const LegPosition& legPosition, const Pointf& destination, uint16_t time) {
+void Hexapod::moveToGlobalPoint(const LegPosition& legPosition, const Point<int16_t>& destination, uint16_t time) {
   this->legs[static_cast<uint8_t>(legPosition)].setGlobalPosition(destination);
   this->move(legPosition, time);
 }

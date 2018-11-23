@@ -15,8 +15,8 @@
 enum class Joint { Coxa, Femur, Tibia };
 
 struct MotionRange {
-  float radius;
-  Pointf range[4];
+  uint8_t radius;
+  Point<int16_t> range[4];
 };
 
 class Leg {
@@ -28,7 +28,7 @@ public:
   @param mountingAngle The angle at which the servo is mounted
   @param position The (default) position of the foot
   */
-  Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, float legOffset, float mountingAngle);
+  Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Point<int16_t> position, uint8_t legOffset, uint16_t mountingAngle);
 
   /*!
   @brief Updates all Servos
@@ -38,15 +38,12 @@ public:
   /*!
   @brief Returns the intersection between the linear function with the given slope and the movement range
   */
-  Pointf getLastLinearPoint(float slope, bool moveUpwards) const;
-
-  Pointf getNextLinearPoint(float slope, bool moveUpwards, uint8_t lastPhase, uint8_t currentPhase, uint8_t swingPhaseCycles, uint8_t stancePhaseCycles) const;
-
+  Point<int16_t> getLastLinearPoint(const LinearFunction& function, bool moveUpwards) const;
 
   /*!
   @brief Puts up a quadratic function from position to destination. Can be used to resolve a z value to a x value
   */
-  QuadraticFunction getQuadraticFunction(const Pointf& destination, float jumpHeight, bool highestPointReached) const;
+  QuadraticFunction getQuadraticFunction(const Point<int16_t>& destination, int8_t jumpHeight, bool highestPointReached) const;
 
   /*!
   @brief Puts up a linear function with the given slope through the current position. Can be used to resolve a y value to a x value
@@ -59,11 +56,11 @@ public:
   void updateAngles();
 
 
-  void setGlobalPosition(const Pointf& position);
-  Pointf getGlobalPosition() const;
+  void setGlobalPosition(const Point<int16_t>& position);
+  Point<int16_t> getGlobalPosition() const;
 
-  void setLocalPosition(const Pointf& position);
-  const Pointf& getLocalPosition() const;
+  void setLocalPosition(const Point<int16_t>& position);
+  const Point<int16_t>& getLocalPosition() const;
 
   void rotateXYZ(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle);
 
@@ -96,8 +93,6 @@ public:
   void move(Joint joint, uint16_t time = 0);
 
 private:
-  void calculateParabolicMovement(Pointf nextMovementArray[], uint8_t size, float nextStep, float slope, float yIntercept, float a, float b, float c) const;
-
   float calculateCoxaAngle() const;
   float calculateFemurAngle(float lengthFemDes) const;
   float calculateTibiaAngle(float lengthFemDes) const;
@@ -105,26 +100,27 @@ private:
   bool isLegOnLeftSide() const;
 
   /*! These values probably have to be customized for your hexapod */
-  constexpr static float coxaLength = 2.5f;
-  constexpr static float femurLength = 8.5f;
-  constexpr static float tibiaLength = 12.0f;
+  constexpr static uint8_t coxaLength = 25;
+  constexpr static uint8_t femurLength = 85;
+  constexpr static uint8_t tibiaLength = 120;
   //Differnce between femurMountingHeight (calculations are done from here) and the orginin
-  constexpr static float zOffset = 5.0f;
+  constexpr static uint8_t zOffset = 50;
   //The servo has 45° at 0° + tibia is bent
-  constexpr static float femurAngleOffset = 37.5f; //45
+  constexpr static uint8_t femurAngleOffset = 37; //45 //37.5
   //Because tibia leg is bendt
-  constexpr static float tibiaAngleOffset = 15.0f; //0
+  constexpr static uint8_t tibiaAngleOffset = 15; //0
   /****************************************************************/
+
+  static MotionRange motionRange;
 
   Servo coxaServo;
   Servo femurServo;
   Servo tibiaServo;
 
-  //local position
-  Pointf position;
+  //local position in millimeter
+  Point<int16_t> position;
 
-  const float legOffset;
-  const float mountingAngle;
-  const MotionRange motionRange;
+  const uint8_t legOffset;
+  const uint16_t mountingAngle;
 };
 #endif //LEG_H

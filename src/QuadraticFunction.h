@@ -13,7 +13,7 @@ public:
   QuadraticFunction(float a = 0.0f, float b = 0.0f, float c = 0.0f);
 
   uint8_t getSlope(float x) const;
-  float getY(float y) const;
+  int16_t getY(int16_t y) const;
 
   float a;
   float b;

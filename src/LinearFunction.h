@@ -12,16 +12,16 @@
 class LinearFunction {
 
 public:
-  LinearFunction(float slope = 0, float yIntercept = 0);
-  LinearFunction(float slope, Pointf point1);
-  LinearFunction(Pointf point1, Pointf point2);
+  LinearFunction(float slope = 0.0f, int16_t yIntercept = 0);
+  LinearFunction(float slope, Point<int16_t> point1);
+  LinearFunction(Point<int16_t> point1, Point<int16_t> point2);
 
-  float getY(float x) const;
-  bool getIntersectionWith(const LinearFunction& linearFunction, Pointf& intersection) const;
-  void getIntersectionWith(const Pointf& circleCenter, uint8_t radius, Pointf intersections[2]) const;
-  void rotateXY(float angle);
+  int16_t getY(int16_t x) const;
+  bool getIntersectionWith(const LinearFunction& linearFunction, Point<int16_t>& intersection) const;
+  void getIntersectionWith(const Point<int16_t>& circleCenter, uint8_t radius, Point<int16_t> intersections[2]) const;
+  void rotateZ(uint16_t angle);
 
   float slope;
-  float yIntercept;
+  int16_t yIntercept;
 };
 #endif //LINEARFUNCTION_H

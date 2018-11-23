@@ -75,8 +75,8 @@ void Gait<startSequenzeSize, patternSize, endSequenzeSize>::getCompleteCycle(uin
   }
 
   //Add the pattern to the cycle
-  for(uint8_t i = 0; i < patternSize - patternEndIndex; ++i) {
-    *cycle++ = this->pattern[i + patternStartIndex];
+  for(uint8_t i = patternStartIndex; i < patternSize - patternEndIndex; ++i) {
+    *cycle++ = this->pattern[i];
   }
 
   //Add the end sequance to the cycle

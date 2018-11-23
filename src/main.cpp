@@ -1,24 +1,20 @@
-#include "Stream.h"
 #include "Hexapod.h"
+#include "Stream.h"
 #include "TestScripts.h"
-
 #ifndef X86_64
   #include <avr/interrupt.h>
   #include <time.h>
   #include <util/delay.h>
   #include <string.h>
 #endif
-/*
-namespace {
-  Hexapod hexapod {};
-}*/
 
-//void executeFunction();
+namespace {
+ Hexapod hexapod {};
+}
+
+void executeFunction();
 
 int main() {
-  avr::cout << "Hallo?" << '\n';
-  Hexapod hexapod {};
-  avr::cout << "Move Linear Test" << '\n';
   #ifndef X86_64
   //enable global interrupts
   sei();
@@ -34,9 +30,8 @@ int main() {
   OCR1A = 25;
   TIMSK1 |= (1 << OCIE1A);
   #endif
-
-  avr::cout << "Move Linear Test" << '\n';
-  //moveLinear_test(hexapod);
+  //Hexapod hexapod {};
+  moveLinear_test(hexapod);
 
   while(1);
 }
@@ -50,8 +45,8 @@ void executeFunction() {
   char functionName = buffer[0];
 
   switch(functionName) {
-    //case 'a': bodyIk_test(hexapod); break;
-    //case 'b': hexapod.bodyIk(atoi(strtok (&buffer[1], ":")), atoi(strtok (nullptr, ":")), atoi(strtok (nullptr, ":"))); break;
+  //  case 'a': bodyIk_test(hexapod); break;
+  //  case 'b': hexapod.bodyIk(atoi(strtok (&buffer[1], ":")), atoi(strtok (nullptr, ":")), atoi(strtok (nullptr, ":"))); break;
   }
 
   //active reading Interrupt
@@ -66,7 +61,7 @@ ISR(TIMER2_COMPA_vect) {
 
 //update servos
 ISR(TIMER1_COMPA_vect) {
-  //hexapod.update(time(nullptr));
+  hexapod.update(time(nullptr));
 }
 
 //UART read commands from the esp / serial console

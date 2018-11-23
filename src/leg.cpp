@@ -7,39 +7,41 @@
 #endif
 
 namespace {
-  static MotionRange calculateMotionRange(float radius = 15.0f, float deadRadius = 5.0f, float angle = 60.0f) {
+  MotionRange calculateMotionRange(uint8_t deadRadius = 50, uint8_t radius = 150, uint8_t angle = 60) {
     angle /= 2;
-    MotionRange motionRange {radius,
-                             Pointf {-deadRadius*tan(angle*M_PI/180.0f), deadRadius}, Pointf {0, radius},
-                             Pointf {deadRadius*tan(angle*M_PI/180.0f), deadRadius}, Pointf {0, radius}};
+    Point<int16_t> rangePoint0 {static_cast<int16_t>(round(-deadRadius*tan(angle*M_PI/180.0f))), deadRadius};
+    Point<int16_t> rangePoint1 {0, radius};
+    rangePoint1.rotateZ(angle);
+    Point<int16_t> rangePoint2 {static_cast<int16_t>(round(deadRadius*tan(angle*M_PI/180.0f))), deadRadius};
+    Point<int16_t> rangePoint3 {0, radius};
+    rangePoint3.rotateZ(-angle);
 
-    motionRange.range[1].rotateZ(angle);
-    motionRange.range[3].rotateZ(-angle);
-    return motionRange;
+    return MotionRange {radius, rangePoint0, rangePoint1, rangePoint2, rangePoint3};
   }
 
-  static Pointf mapToGlobal(const Pointf& localPoint, float legOffset, float mountingAngle) {
-    Pointf globalPoint = localPoint;
+  Point<int16_t> mapToGlobal(const Point<int16_t>& localPoint, uint8_t legOffset, uint16_t mountingAngle) {
+    Point<int16_t> globalPoint = localPoint;
     globalPoint.y += legOffset;
     globalPoint.rotateZ(-mountingAngle);
     return globalPoint;
   }
 
-  static Pointf mapToLocal(const Pointf& globalPoint, float legOffset, float mountingAngle) {
-    Pointf localPoint = globalPoint;
+  Point<int16_t> mapToLocal(const Point<int16_t>& globalPoint, uint8_t legOffset, uint16_t mountingAngle) {
+    Point<int16_t> localPoint = globalPoint;
     localPoint.rotateZ(mountingAngle);
     localPoint.y -= legOffset;
     return localPoint;
   }
 }
 
+MotionRange Leg::motionRange {calculateMotionRange()};
+
 /******************************************************************************************************************************************************/
 //public
 /******************************************************************************************************************************************************/
-Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Pointf position, float legOffset, float mountingAngle)
+Leg::Leg(Servo&& coxaServo, Servo&& femurServo, Servo&& tibiaServo, Point<int16_t> position, uint8_t legOffset, uint16_t mountingAngle)
 : coxaServo {coxaServo}, femurServo {femurServo}, tibiaServo {tibiaServo},
-  position {position}, legOffset {legOffset}, mountingAngle {mountingAngle},
-  motionRange {calculateMotionRange()} {}
+  position {position}, legOffset {legOffset}, mountingAngle {mountingAngle} {}
 
 void Leg::update(uint32_t currentMillis) {
   coxaServo.update(currentMillis);
@@ -47,44 +49,42 @@ void Leg::update(uint32_t currentMillis) {
   tibiaServo.update(currentMillis);
 }
 
-Pointf Leg::getLastLinearPoint(float slope, bool moveUpwards) const {
+Point<int16_t> Leg::getLastLinearPoint(const LinearFunction& function, bool moveUpwards) const {
   if(this->isLegOnLeftSide()) {
     moveUpwards = !moveUpwards;
   }
 
-  LinearFunction function = this->getLinearFunction(slope);
-
   //LinearFunction has exactly two intersections with the motionRange
-  Pointf intersections[2];
+  Point<int16_t> intersections[2];
   uint8_t index = 0;
 
-  LinearFunction leftMotionRange {motionRange.range[0], motionRange.range[1]};
-  LinearFunction bottomMotionRange {motionRange.range[0], motionRange.range[2]};
-  LinearFunction rightMotionRange {motionRange.range[2], motionRange.range[3]};
+  LinearFunction leftMotionRange {Leg::motionRange.range[0], Leg::motionRange.range[1]};
+  LinearFunction bottomMotionRange {Leg::motionRange.range[0], Leg::motionRange.range[2]};
+  LinearFunction rightMotionRange {Leg::motionRange.range[2], Leg::motionRange.range[3]};
 
   //Find both insections. Intersection will be saved in the interection array.
   //Index shows how much intersections have been found
   if(function.getIntersectionWith(leftMotionRange, intersections[index])) {
-    if(intersections[index].x >= motionRange.range[1].x && intersections[index].x <= motionRange.range[0].x) {
+    if(intersections[index].x >= Leg::motionRange.range[1].x && intersections[index].x <= Leg::motionRange.range[0].x) {
       ++index;
     }
   }
   if(function.getIntersectionWith(bottomMotionRange, intersections[index])) {
-    if(intersections[index].x > motionRange.range[0].x && intersections[index].x  < motionRange.range[2].x) {
+    if(intersections[index].x > Leg::motionRange.range[0].x && intersections[index].x  < Leg::motionRange.range[2].x) {
       ++index;
     }
   }
   if(index < 2 && function.getIntersectionWith(rightMotionRange, intersections[index])) {
-    if(intersections[index].x >= motionRange.range[2].x && intersections[index].x <= motionRange.range[3].x) {
+    if(intersections[index].x >= Leg::motionRange.range[2].x && intersections[index].x <= Leg::motionRange.range[3].x) {
       ++index;
     }
   }
   if(index < 2) {
-    Pointf circleIntersections[2];
-    function.getIntersectionWith(Pointf {0.0f, 0.0f}, motionRange.radius, circleIntersections);
+    Point<int16_t> circleIntersections[2];
+    function.getIntersectionWith(Point<int16_t> {0, 0}, Leg::motionRange.radius, circleIntersections);
 
     for(uint8_t i = 0; i < 2; ++i) {
-      if(circleIntersections[i].y > motionRange.range[1].y) {
+      if(circleIntersections[i].y > Leg::motionRange.range[1].y) {
         intersections[index] = circleIntersections[i];
       }
     }
@@ -94,49 +94,23 @@ Pointf Leg::getLastLinearPoint(float slope, bool moveUpwards) const {
 
   //Find the intersection of interest
   if(moveUpwards) {
-    if(intersections[0].x > intersections[1].x ) {
+    if(intersections[0].x > intersections[1].x) {
       return intersections[0];
     } else {
       return intersections[1];
     }
   } else {
-    if(intersections[0].x < intersections[1].x ) {
+    if(intersections[0].x < intersections[1].x) {
       return intersections[0];
     } else {
       return intersections[1];
     }
-  }
-}
-
-Pointf Leg::getNextLinearPoint(float slope, bool moveUpwards, uint8_t lastPhase, uint8_t currentPhase, uint8_t swingPhaseCycles, uint8_t stancePhaseCycles) const {
-  static LinearFunction linearFunction;
-  static QuadraticFunction quadraticFunction;
-  static float nextStep;
-
-  if(lastPhase != currentPhase) {
-    linearFunction = this->getLinearFunction(slope);
-
-    if(currentPhase) {
-      Pointf destination = this->getLastLinearPoint(slope, moveUpwards);
-      nextStep = (destination.x - this->position.x)/swingPhaseCycles;
-      quadraticFunction = this->getQuadraticFunction(destination, -7.5f, quadraticFunction.getSlope(this->position.x) <= 0);
-    } else {
-      Pointf destination = this->getLastLinearPoint(slope, !moveUpwards);
-      nextStep = (destination.x - this->position.x)/stancePhaseCycles;
-    }
-  }
-
-  float x = this->position.x + nextStep;
-  if(currentPhase) {
-    return Pointf {x, linearFunction.getY(x), quadraticFunction.getY(x)};
-  } else {
-    return Pointf {x, linearFunction.getY(x), position.z};
   }
 }
 
 // Sets up a function equation (square) to resolve a z value to a x value
 // P0 = starting point, P1 = highest point, P2 = endpoint
-QuadraticFunction Leg::getQuadraticFunction(const Pointf& destination, float jumpHeight, bool highestPointReached) const {
+QuadraticFunction Leg::getQuadraticFunction(const Point<int16_t>& destination, int8_t jumpHeight, bool highestPointReached) const {
   //a = (z2 + z0 - 2z1 +- 2* sqrt(z0*z2 - z2*z1 - z0*z1 + z1*z1)) / (x0-x2)²
   float a;
   if(highestPointReached) {
@@ -155,7 +129,7 @@ QuadraticFunction Leg::getQuadraticFunction(const Pointf& destination, float jum
 LinearFunction Leg::getLinearFunction(float slope) const {
   //Create function in local coordinate system
   LinearFunction temp {slope, 0};
-  temp.rotateXY(this->mountingAngle);
+  temp.rotateZ(this->mountingAngle);
   return LinearFunction {temp.slope, this->position};
 }
 
@@ -173,24 +147,24 @@ void Leg::updateAngles() {
   setAllAngles(angleCoxa, angleFemur, angleTibia);
 }
 
-void Leg::setGlobalPosition(const Pointf& position) {
+void Leg::setGlobalPosition(const Point<int16_t>& position) {
   this->position = mapToLocal(position, this->legOffset, this->mountingAngle);
 }
 
-Pointf Leg::getGlobalPosition() const {
+Point<int16_t> Leg::getGlobalPosition() const {
   return mapToGlobal(this->position, this->legOffset, this->mountingAngle);
 }
 
-void Leg::setLocalPosition(const Pointf& position) {
+void Leg::setLocalPosition(const Point<int16_t>& position) {
   this->position = position;
 }
 
-const Pointf& Leg::getLocalPosition() const {
+const Point<int16_t>& Leg::getLocalPosition() const {
   return this->position;
 }
 
 void Leg::rotateXYZ(int8_t yawAngle, int8_t pitchAngle, int8_t rollAngle) {
-  Pointf globalPosition = this->getGlobalPosition();
+  Point<int16_t> globalPosition = this->getGlobalPosition();
   globalPosition.rotateXYZ(static_cast<float>(yawAngle), static_cast<float>(pitchAngle), static_cast<float>(rollAngle));
   this->setGlobalPosition(globalPosition);
 }
@@ -206,12 +180,12 @@ void Leg::setAngle(Joint joint, uint8_t angle) {
     switch(joint) {
       case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
       case Joint::Femur:  this->femurServo.setAngle(angle - femurAngleOffset); break;
-      case Joint::Tibia:  this->tibiaServo.setAngle(180.0f - angle + tibiaAngleOffset); break;
+      case Joint::Tibia:  this->tibiaServo.setAngle(180 - angle + tibiaAngleOffset); break;
     }
   } else {
     switch(joint) {
       case Joint::Coxa:   this->coxaServo.setAngle(angle);  break;
-      case Joint::Femur:  this->femurServo.setAngle(180.0f + femurAngleOffset - angle); break;
+      case Joint::Femur:  this->femurServo.setAngle(180 + femurAngleOffset - angle); break;
       case Joint::Tibia:  this->tibiaServo.setAngle(angle - tibiaAngleOffset); break;
     }
   }
@@ -237,7 +211,7 @@ void Leg::move(Joint joint, uint16_t time) {
 
 float Leg::calculateCoxaAngle() const {
   //a = tan⁻¹(x/y)
-  return atan(this->position.x/this->position.y)*180.0f/M_PI + Servo::angleRange/2.0f;
+  return atan(this->position.x/static_cast<float>(this->position.y))*180.0f/M_PI + Servo::angleRange/2.0f;
 }
 
 float Leg::calculateFemurAngle(float lengthFemDes) const {

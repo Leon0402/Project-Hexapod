@@ -26,7 +26,7 @@ BINDIR := bin
 cppfiles := $(wildcard $(SRCDIR)/*.cpp)
 objects  := $(subst $(SRCDIR)/, $(OBJDIR)/, $(cppfiles:.cpp=.o))
 
-.Phony: all debug arduino upload size clean
+.Phony: all debug arduino upload size nm clean
 
 default all: arduino
 
@@ -34,8 +34,10 @@ debug: CXXFLAGS += -D X86_64=1
 debug: CXX = g++
 debug: $(BINDIR)/$(TARGET)
 
-arduino: LDFLAGS += -Os  -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
-arduino: CXXFLAGS += -Os -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -D F_CPU=$(F_CPU)
+
+#-fpack-struct?
+arduino: LDFLAGS += -Os  -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fshort-enums -Wl,-Map,foo.map
+arduino: CXXFLAGS += -Os -mmcu=$(MCU) -funsigned-char -funsigned-bitfields -fshort-enums -D F_CPU=$(F_CPU)
 arduino: $(BINDIR)/$(TARGET).hex
 
 # General
@@ -61,6 +63,9 @@ upload:
 
 size:
 	avr-size --mcu=$(MCU) -C --format=avr $(BINDIR)/$(TARGET).elf
+
+nm:
+	avr-nm --size-sort -S -C -t decimal $(BINDIR)/$(TARGET).elf
 
 clean:
 	$(REMOVE) $(OBJDIR)
