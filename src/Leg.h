@@ -38,7 +38,7 @@ public:
   /*!
   @brief Returns the intersection between the linear function with the given slope and the movement range
   */
-  Point<int16_t> getLastLinearPoint(const LinearFunction& function, bool moveUpwards) const;
+  Point<int16_t> getLastLinearPoint(const LinearFunction& function, float slope, bool moveUpwards) const;
 
   /*!
   @brief Puts up a quadratic function from position to destination. Can be used to resolve a z value to a x value

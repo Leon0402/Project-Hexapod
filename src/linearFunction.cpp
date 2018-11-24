@@ -25,6 +25,11 @@ bool LinearFunction::getIntersectionWith(const LinearFunction& function, Point<i
     return false;
   }
   intersection.x = (yIntercept - function.yIntercept)/(function.slope - slope);
+
+  /*!
+  * Ungenau wenn -1 < x < 1, da integer zum Einsatz kommen
+  * patch: In Begrenzungsfunktion einsetzen
+  */
   intersection.y = slope*intersection.x + yIntercept;
   return true;
 }
@@ -36,16 +41,28 @@ void LinearFunction::getIntersectionWith(const Point<int16_t>& circleCenter, uin
   float root = 2*circleCenter.y*slope*circleCenter.x - 2*circleCenter.x*slope*yIntercept
                - circleCenter.y*circleCenter.y - yIntercept*yIntercept + 2*circleCenter.y*yIntercept
                + radius*radius - circleCenter.x*circleCenter.x*slope*slope + radius*radius*slope*slope;
+
   //(Mx2*m - m*n + Mx1 + sqrt(2*Mx2*m*Mx1 - 2*Mx1*m*y - Mx2² - y² +  2*Mx2*y + r² - Mx1²m² + r²m²))/(1 + m²)
   intersections[0].x = (beforeRoot + sqrt(root))/(1+slope*slope);
+
+  /*!
+  * Ungenau wenn -1 < x < 1, da integer zum Einsatz kommen
+  * patch:
+  */
   intersections[0].y = slope*intersections[0].x + yIntercept;
+
   //(Mx2*m - m*n + Mx1 - sqrt(2*Mx2*m*Mx1 - 2*Mx1*m*y - Mx2² - y² +  2*Mx2*y + r² - Mx1²m² + r²m²))/(1 + m²)
   intersections[1].x = (beforeRoot - sqrt(root))/(1+slope*slope);
+
+  /*!
+  * Ungenau wenn -1 < x < 1, da integer zum Einsatz kommen
+  * patch:
+  */
   intersections[1].y = slope*intersections[1].x + yIntercept;
 }
 
 void LinearFunction::rotateZ(uint16_t angle) {
-  Point<int16_t> point {100, static_cast<int16_t>(round(this->slope*1 + this->yIntercept))};
+  Point<int16_t> point {100, static_cast<int16_t>(this->slope*100)};
   point.rotateZ(angle);
 
   //Thorugh rotation it can happen that the Linear Function is parallel to the y-axis

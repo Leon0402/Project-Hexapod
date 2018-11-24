@@ -7,7 +7,7 @@
 #endif
 
 namespace {
-  MotionRange calculateMotionRange(uint8_t deadRadius = 50, uint8_t radius = 150, uint8_t angle = 60) {
+  MotionRange calculateMotionRange(uint8_t deadRadius = 50, uint8_t radius = 150, uint8_t angle = 40) {
     angle /= 2;
     Point<int16_t> rangePoint0 {static_cast<int16_t>(round(-deadRadius*tan(angle*M_PI/180.0f))), deadRadius};
     Point<int16_t> rangePoint1 {0, radius};
@@ -49,8 +49,15 @@ void Leg::update(uint32_t currentMillis) {
   tibiaServo.update(currentMillis);
 }
 
-Point<int16_t> Leg::getLastLinearPoint(const LinearFunction& function, bool moveUpwards) const {
-  if(this->isLegOnLeftSide()) {
+Point<int16_t> Leg::getLastLinearPoint(const LinearFunction& function, float slope, bool moveUpwards) const {
+
+  //Find out if the foot has to follow the linearFunction or not (depends on mountingAngle)
+  /*!
+  * Was ist, wenn x == 0?
+  */
+  Point<int16_t> point {100, static_cast<int16_t>(slope*100)};
+  point.rotateZ(this->mountingAngle);
+  if(point.x < 0) {
     moveUpwards = !moveUpwards;
   }
 

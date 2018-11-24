@@ -83,107 +83,7 @@ private:
   Servocontroller servocontroller2;
   Leg legs[6];
 };
-/*
-template<uint8_t gaitStartSequenceSize, uint8_t gaitPatternSize, uint8_t gaitEndSequenceSize>
-void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gaitEndSequenceSize>& gait, float slope, bool moveUpwards, bool startSequenze, bool endSequenze) {
-  constexpr uint8_t intermediateSteps = 3;
 
-  const uint8_t patternSize = gait.getCompleteCycleSize(startSequenze, endSequenze);
-  uint8_t pattern[patternSize];
-  gait.getCompleteCycle(pattern, startSequenze, endSequenze);
-
-  for(uint8_t i = 0; i < patternSize; ++i) {
-    for(uint8_t j = 0; j < intermediateSteps; ++j) {
-      for(uint8_t k = 0; k < 1; ++k) {
-        Point<int16_t> nextPosition;
-        if(j != 0) {
-          nextPosition = this->legs[k].getNextLinearPoint(slope, moveUpwards, (pattern[i] >> k) & 0x01, (pattern[i] >> k) & 0x01, gait.getSwingPhaseCycles()*intermediateSteps, gait.getStancePhaseCycles()*intermediateSteps);
-        } else if(i != 0) {
-          nextPosition = this->legs[k].getNextLinearPoint(slope, moveUpwards, (pattern[i-1] >> k) & 0x01, (pattern[i] >> k) & 0x01, gait.getSwingPhaseCycles()*intermediateSteps, gait.getStancePhaseCycles()*intermediateSteps);
-        } else {
-          nextPosition = this->legs[k].getNextLinearPoint(slope, moveUpwards, 255, (pattern[i] >> k) & 0x01, gait.getSwingPhaseCycles()*intermediateSteps, gait.getStancePhaseCycles()*intermediateSteps);
-        }
-        this->moveToLocalPoint(static_cast<LegPosition>(k), nextPosition);
-        avr::cout << "Leg " << k << ": " << nextPosition << '\n';
-        //_delay_ms(500);
-      }
-      avr::cout << '\n';
-    }
-  }
-}*/
-/*
-template<uint8_t gaitStartSequenceSize, uint8_t gaitPatternSize, uint8_t gaitEndSequenceSize>
-void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gaitEndSequenceSize>& gait, float slope, bool moveUpwards, bool startSequenze, bool endSequenze) {
-  constexpr uint8_t intermediateSteps = 3;
-
-  const uint8_t patternSize = gait.getCompleteCycleSize(startSequenze, endSequenze);
-  uint8_t pattern[patternSize];
-  gait.getCompleteCycle(pattern, startSequenze, endSequenze);
-
-  LinearFunction linearFunctions[6] {};
-  static QuadraticFunction quadraticFunctions[6] {};
-  static bool functionCalledOnce[6];
-  static float nextSteps[6] {};
-  float nextStepInaccuracies[6] {};
-
-  for(uint8_t i = 0; i < patternSize; ++i) {
-    for(uint8_t j = 0; j < intermediateSteps; ++j) {
-      for(uint8_t k = 0; k < 1; ++k) {
-        Point<int16_t> localPosition = this->legs[k].getLocalPosition();
-        uint8_t currentPhase = (pattern[i] >> k) & 0x01;
-
-        //determine if the phase has changed
-        if(j == 0) {
-          if(i == 0 || ((pattern[i-1] >> k) & 0x01) != currentPhase) {
-            linearFunctions[k] = this->legs[k].getLinearFunction(slope);
-            if(currentPhase) {
-              Point<int16_t> destination = this->legs[k].getLastLinearPoint(linearFunctions[k], moveUpwards);
-              //patch: Beim ersten Aufruf kann sich das Bein noch nicht im Sprung befinden... dementsprechend,
-              //gibt es auch keine quadratischeFunktion
-              if(functionCalledOnce[k]) {
-                avr::cout << "destination.z: " << destination.z << '\n';
-                destination.z = quadraticFunctions[k].getY(destination.x);
-                avr::cout << "destination.z: " << destination.z << '\n';
-                quadraticFunctions[k] = this->legs[k].getQuadraticFunction(destination, -75, quadraticFunctions[k].getSlope(localPosition.x) <= 0);
-              } else {
-                quadraticFunctions[k] = this->legs[k].getQuadraticFunction(destination, -75, 0);
-              }
-              functionCalledOnce[k] = true;
-              //patch: Bei neuem Funktionaufruf ändert sich die Phase, der Wert für nextStep bleibt aber erhalten, falls das Bein sich grade in
-              //einer Phase befindet (betrifft vor allem Sprung)
-              //Prüfen (mithilfe der Sprungfunktion), ob Zielhöhe erreicht worden ist, wegen Ungenauigkeiten,
-              //Spielraum lassen (hier 3mm)
-              avr::cout << "Destination: " << destination << '\n';
-              avr::cout << "current: " << localPosition.z << '\n';
-              avr::cout << "current: " << quadraticFunctions[k].getY(localPosition.x) << '\n';
-              avr::cout << "calc: " << abs(destination.z - quadraticFunctions[k].getY(localPosition.x)) << '\n';
-              if(abs(destination.z - quadraticFunctions[k].getY(localPosition.x)) < 3) {
-                nextSteps[k] = (destination.x - localPosition.x)/static_cast<float>(gait.getSwingPhaseCycles()*intermediateSteps);
-              }
-            } else {
-              Point<int16_t> destination = this->legs[k].getLastLinearPoint(linearFunctions[k], !moveUpwards);
-              nextSteps[k] = (destination.x - localPosition.x)/static_cast<float>(gait.getStancePhaseCycles()*intermediateSteps);
-              avr::cout << "Destination: " << destination << '\n';
-            }
-          }
-        }
-        int16_t nextStepRounded = round(nextSteps[k] + nextStepInaccuracies[k]);
-        nextStepInaccuracies[k] = nextSteps[k] + nextStepInaccuracies[k] - nextStepRounded;
-        int16_t x = localPosition.x + nextStepRounded;
-        Point<int16_t> nextPosition {x, linearFunctions[k].getY(x), localPosition.z};
-        if(currentPhase) {
-          nextPosition.z = quadraticFunctions[k].getY(x);
-        }
-        avr::cout << k << ": " << nextPosition << '\n';
-        this->moveToLocalPoint(static_cast<LegPosition>(k), nextPosition);
-      }
-      avr::cout << '\n';
-    }
-    avr::cout << '\n';
-  }
-  avr::cout << '\n';
-  avr::cout << '\n';
-}*/
 template<uint8_t gaitStartSequenceSize, uint8_t gaitPatternSize, uint8_t gaitEndSequenceSize>
 void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gaitEndSequenceSize>& gait, float slope, bool moveUpwards, bool startSequenze, bool endSequenze) {
   //create array out of the startSequenze, pattern and endSequenze
@@ -200,7 +100,7 @@ void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gait
   static bool firstCall = true;
 
   if(firstCall) {
-    for(uint8_t k = 0; k < 1; ++k) {
+    for(uint8_t k = 5; k < 6; ++k) {
       doCalculations(this->legs[k], this->legs[k].getLocalPosition(), (pattern[0] >> k) & 0x01, gait.getSwingPhaseCycles(),
       gait.getStancePhaseCycles(), slope, moveUpwards, intermediateSteps, destination[k], linearFunctions[k], quadraticFunctions[k], nextSteps[k], nextStepInaccuracies[k]);
     }
@@ -209,7 +109,7 @@ void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gait
 
   for(uint8_t i = 0; i < patternSize; ++i) {
     for(uint8_t j = 0; j < intermediateSteps; ++j) {
-      for(uint8_t k = 0; k < 1; ++k) {
+      for(uint8_t k = 5; k < 6; ++k) {
         Point<int16_t> localPosition = this->legs[k].getLocalPosition();
         uint8_t currentPhase = (pattern[i] >> k) & 0x01;
 
@@ -234,10 +134,9 @@ void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gait
         nextStepInaccuracies[k] = nextSteps[k] + nextStepInaccuracies[k] - nextStepRounded;
         int16_t x = localPosition.x + nextStepRounded;
         //check that leg is never behind its bounds
-        if((nextStepRounded > 0 && x > destination[k].x) || (nextStepRounded < 0 && x < destination[k].x) || nextStepRounded == 0) {
+        if((nextStepRounded > 0 && x > destination[k].x) || (nextStepRounded < 0 && x < destination[k].x) || nextSteps[k] == 0) {
           //Wenn an Grenze, dann sollte automatisch nextStep = 0 sein? ... quadratische Funktion kann bei Sprung nicht
           //bestimmt werden (muss übersprungen werden hier)
-          avr::cout << "Destination"
           this->moveToLocalPoint(static_cast<LegPosition>(k), destination[k]);
           continue;
         }
@@ -248,12 +147,10 @@ void Hexapod::moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gait
         //  avr::cout << "Jump" << '\n';
           nextPosition.z = quadraticFunctions[k].getY(x);
         }
-        avr::cout << k << ": " << nextPosition << '\n';
+        //avr::cout << k << ": " << nextPosition << '\n';
         //moves the leg to the next Position
         this->moveToLocalPoint(static_cast<LegPosition>(k), nextPosition);
-        _delay_ms(5);
       }
-    //  avr::cout << '\n';
     }
   }
 }
@@ -263,14 +160,17 @@ float slope, bool moveUpwards, uint8_t steps, Point<int16_t>& destination, Linea
   linearFunction = leg.getLinearFunction(slope);
 
   if(currentPhase) {
-    destination = leg.getLastLinearPoint(linearFunction, moveUpwards);
+    avr::cout << "JUMP" << '\n';
+    destination = leg.getLastLinearPoint(linearFunction, slope, moveUpwards);
     quadraticFunction = leg.getQuadraticFunction(destination, -75, 0);
     nextStep = (destination.x - localPosition.x)/static_cast<float>(swingPhaseCycles*steps);
   } else {
-    destination = leg.getLastLinearPoint(linearFunction, !moveUpwards);
+    avr::cout << "STANCE" << '\n';
+    destination = leg.getLastLinearPoint(linearFunction, slope, !moveUpwards);
     nextStep = (destination.x - localPosition.x)/static_cast<float>(stancePhaseCycles*steps);
   }
   nextStepInaccuracy = 0.0f;
-  //avr::cout << "Destination: " << destination << '\n';
+  avr::cout << "NextStept: " << nextStep << '\n';
+  avr::cout << "Destination: " << destination << '\n';
 }
 #endif //HEXAPOD_H

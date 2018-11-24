@@ -25,21 +25,26 @@ void bodyIk_test(Hexapod& hexapod) {
 void moveLinear_test(Hexapod& hexapod) {
   //wave gait
   //avr::cout << "waveGait" << '\n';
-  /*for(uint8_t i = 0; i < 2; ++i) {
+  for(uint8_t i = 0; i < 2; ++i) {
     hexapod.moveLinear(waveGait, 0, true);
   }
 
   //tripod gait
-//  avr::cout << "tripodGait" << '\n';
+  //avr::cout << "tripodGait" << '\n';
   for(uint8_t i = 0; i < 2; ++i) {
     hexapod.moveLinear(tripodGait, 0, true);
-  }*/
+  }
 
   //ripple gait
   //avr::cout << "trippleGait" << '\n';
-  hexapod.moveLinear(rippleGait, 0, true, true, false);
+  hexapod.moveLinear(rippleGait, 255, false, true, false);
   for(uint8_t i = 0; i < 1; ++i) {
-    hexapod.moveLinear(rippleGait, 0, true);
+    hexapod.moveLinear(rippleGait, 255, false);
   }
-  hexapod.moveLinear(rippleGait, 0, true, false, true);
+  hexapod.moveLinear(rippleGait, 255, false, false, true);
+  /*
+  hexapod.moveLinear(rippleGait, -1, false, true, true);
+  hexapod.moveLinear(rippleGait, -1, false, true, true);
+  hexapod.moveLinear(rippleGait, 1, false, true, true);
+  hexapod.moveLinear(rippleGait, 1, false, true, true);*/
 }
