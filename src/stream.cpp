@@ -45,7 +45,6 @@ char Stream::read() {
   return UDR0;
 }
 
-<<<<<<< HEAD
 void Stream::read(char* buffer, uint8_t size) {
   uint8_t nextChar = this->read();
 
@@ -57,17 +56,4 @@ void Stream::read(char* buffer, uint8_t size) {
     nextChar = this->read();
   }
   *buffer = '\0';
-=======
-void Stream::read(char* Buffer, uint8_t size) {
-  uint8_t nextChar = this->read();
-
-  for(uint8_t i = 0; i < size - 1; ++i) {
-    if( nextChar == '\n') {
-      break;
-    }
-    *Buffer++ = nextChar;
-    nextChar = this->read();
-  }
-  *Buffer = '\0';
->>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 }

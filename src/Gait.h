@@ -7,7 +7,6 @@
   #include <cstdint>
 #endif
 
-<<<<<<< HEAD
 template<uint8_t startSequenzeSize, uint8_t patternSize, uint8_t endSequenzeSize>
 class Gait {
 
@@ -97,19 +96,5 @@ template<uint8_t startSequenzeSize, uint8_t patternSize, uint8_t endSequenzeSize
 uint8_t Gait<startSequenzeSize, patternSize, endSequenzeSize>::getStancePhaseCycles() const {
   return this->stancePhaseCycles;
 }
-=======
-template<uint8_t PATTERN_SIZE, uint8_t START_SEQUENZE_SIZE, uint8_t END_SEQUENZE_SIZE>
-struct Gait {
-  uint8_t startSequenze[START_SEQUENZE_SIZE];
-  uint8_t pattern[PATTERN_SIZE];
-  uint8_t endSequenze[END_SEQUENZE_SIZE];
-  uint8_t swingPhaseCycles;
-  uint8_t stancePhaseCycles;
-};
-
-extern Gait<6, 0, 0> waveGait;
-extern Gait<6, 1, 1> rippleGait;
-extern Gait<2, 0, 0> tripodGait;
->>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 
 #endif //GAITS_H

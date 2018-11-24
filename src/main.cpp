@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 #include "Hexapod.h"
 #include "Stream.h"
 #include "TestScripts.h"
-=======
-  #include "Hexapod.h"
-
->>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 #ifndef X86_64
   #include <avr/interrupt.h>
   #include <time.h>
@@ -17,13 +12,7 @@ namespace {
  Hexapod hexapod {};
 }
 
-<<<<<<< HEAD
 void executeFunction();
-=======
-void executeFunction(char functionName);
-
-int main() {
->>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 
 int main() {
   #ifndef X86_64
@@ -47,7 +36,6 @@ int main() {
   while(1);
 }
 
-<<<<<<< HEAD
 void executeFunction() {
   //Deactivate reading interrupt
   UCSR0B &= ~(1<<RXCIE0);
@@ -63,25 +51,6 @@ void executeFunction() {
 
   //active reading Interrupt
   UCSR0B |= (1<<RXCIE0);
-=======
-void executeFunction(char functionName) {
-  char buffer[10];
-  avr::cout.read(buffer, sizeof buffer / sizeof buffer[0]);
-  switch(functionName) {
-    case 'b': avr::cout << strtok (buffer, ",") << '\n'; break;
-  }
-  avr::cout << "Test" << '\n';
-/*
-  char * argument;
-	argument = strtok (command, ",");
-	while(argument) {
-    while(*argument) {
-      avr::cout << *argument;
-      argument++;
-    }
-		argument = strtok (NULL, ",");
-	}*/
->>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 }
 
 #ifndef X86_64
@@ -97,10 +66,6 @@ ISR(TIMER1_COMPA_vect) {
 
 //UART read commands from the esp / serial console
 ISR(USART_RX_vect) {
-<<<<<<< HEAD
   executeFunction();
-=======
-  executeFunction(avr::cout.read());
->>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 }
 #endif
