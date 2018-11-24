@@ -4,9 +4,12 @@
 #include "Servocontroller.h"
 #include "Leg.h"
 #include "Gait.h"
+<<<<<<< HEAD
 
 #include "Stream.h"
 #include <util/delay.h>
+=======
+>>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 
 enum class LegPosition { FrontLeft, MiddleLeft, RearLeft, FrontRight, MiddleRight, RearRight};
 
@@ -27,8 +30,13 @@ public:
   /*!
   @brief Moves Linear
   */
+<<<<<<< HEAD
   template<uint8_t gaitStartSequenceSize, uint8_t gaitPatternSize, uint8_t gaitEndSequenceSize>
   void moveLinear(const Gait<gaitStartSequenceSize, gaitPatternSize, gaitEndSequenceSize>& gait, float slope, bool moveUpwards, bool startSequenze = false, bool endSequenze = false);
+=======
+  template<uint8_t GAIT_PATTERN_SIZE, uint8_t GAIT_START_SEQUENZE_SIZE, uint8_t GAIT_END_SEQUENZE_SIZE>
+  void moveLinear(const Gait<GAIT_PATTERN_SIZE, GAIT_START_SEQUENZE_SIZE, GAIT_END_SEQUENZE_SIZE>& gait, float slope, bool moveUpwards, bool startSequenze = false, bool endSequenze = false);
+>>>>>>> 9060e447d636b443dcfa18bc2e84334e92c8f3ce
 
   /*
   @brief Complete body rotation
