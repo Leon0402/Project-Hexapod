@@ -30,7 +30,7 @@ int main() {
   OCR1A = 25;
   TIMSK1 |= (1 << OCIE1A);
   #endif
-  //Hexapod hexapod {};
+
   moveLinear_test(hexapod);
 
   while(1);
@@ -44,9 +44,12 @@ void executeFunction() {
   avr::cout.read(buffer, sizeof buffer / sizeof buffer[0]);
   char functionName = buffer[0];
 
+  avr::cout << buffer[0] << '\n';
+
   switch(functionName) {
-  //  case 'a': bodyIk_test(hexapod); break;
-  //  case 'b': hexapod.bodyIk(atoi(strtok (&buffer[1], ":")), atoi(strtok (nullptr, ":")), atoi(strtok (nullptr, ":"))); break;
+    case 'a': moveLinear_test(hexapod); break;
+    case 'b': hexapod.bodyIk(atoi(strtok (&buffer[1], ":")), atoi(strtok (nullptr, ":")), atoi(strtok (nullptr, ":"))); break;
+    default: avr::cout << "default" << '\n';
   }
 
   //active reading Interrupt

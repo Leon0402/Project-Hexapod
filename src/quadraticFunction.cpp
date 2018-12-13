@@ -1,7 +1,5 @@
 #include "QuadraticFunction.h"
 
-#include "Stream.h"
-
 QuadraticFunction::QuadraticFunction(float a, float b, float c)
 : a {a}, b {b}, c {c} {}
 

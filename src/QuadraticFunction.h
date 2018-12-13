@@ -19,4 +19,4 @@ public:
   float b;
   float c;
 };
-#endif
+#endif //QUADRATICFUNCTION_H
